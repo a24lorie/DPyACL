@@ -50,7 +50,7 @@ combined by the user to better fit its needs. The required components to setup a
  
  ### Configuring the experiment
  
- ```python
+```python
 ml_technique = LogisticRegression(solver='liblinear')
 stopping_criteria = MaxIteration(50)
 query_strategy =  QueryMarginSampling()
@@ -79,12 +79,12 @@ experiment = HoldOutExperiment(
 
  ### Execute the experiment
  
- ```python
+```python
  result = experiment.evaluate(verbose=True)
 ```
 
  ### Analyze the experiment results
- ```python
+```python
  query_analyser = ExperimentAnalyserFactory.experiment_analyser(
                             performance_metrics= [metric.metric_name for metric in performance_metrics],
                             method_name=query_strategy.query_function_name,
@@ -94,7 +94,7 @@ experiment = HoldOutExperiment(
 
 # get a brief description of the experiment
 query_analyser.plot_learning_curves(title='Active Learning experiment results')
- ```
+```
 
 # Contribution
 
