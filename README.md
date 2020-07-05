@@ -5,7 +5,7 @@
                                May 2020
 			    Alfredo Lorie Bernardo							
 
-                             version 1.0
+                             version 0.3
 
 ***
 
@@ -48,7 +48,7 @@ combined by the user to better fit its needs. The required components to setup a
  8. **The Oracle**: The current release provides a Simulated Oracle
  
  
- ### Configuring the experiment
+### Configuring the experiment
  
 ```python
 ml_technique = LogisticRegression(solver='liblinear')
@@ -77,13 +77,13 @@ experiment = HoldOutExperiment(
 )
 ```
 
- ### Execute the experiment
+### Execute the experiment
  
 ```python
  result = experiment.evaluate(verbose=True)
 ```
 
- ### Analyze the experiment results
+### Analyze the experiment results
 ```python
  query_analyser = ExperimentAnalyserFactory.experiment_analyser(
                             performance_metrics= [metric.metric_name for metric in performance_metrics],

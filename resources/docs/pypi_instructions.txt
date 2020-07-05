@@ -1,0 +1,20 @@
+1. create the distributable
+>>> python setup.py sdist
+
+2. upload to PyPi Test
+>>> twine upload --repository testpypi --skip-existing  dist/*
+
+3. install from testpypi
+>>> pip install -i https://test.pypi.org/simple/ dpyacl
+
+3.a update from testpypi
+>>> pip install -i https://test.pypi.org/simple/ --upgrade dpyacl
+
+4. upload to PyPi main
+>>> twine upload --skip-existing  dist/*
+
+5. install from PyPi main
+>>> pip install dpyacl
+
+5.a update from PyPi main
+>>> pip install --upgrade dpyacl
