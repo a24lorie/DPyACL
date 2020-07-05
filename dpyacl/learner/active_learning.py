@@ -8,8 +8,8 @@ from abc import ABCMeta, abstractmethod
 
 from distributed import Client
 
-from dpyacl.core.stop_criteria import AbstractStopCriterion, MaxIteration
-from ..core import StateItem, State
+from ..core.stop_criteria import AbstractStopCriterion, MaxIteration
+from ..core.state import StateItem, State
 from ..scenario.scenario import AbstractScenario
 
 __all__ = ['IAlgorithm', 'AbstractALAlgorithm', 'ClassicActiveLearning']

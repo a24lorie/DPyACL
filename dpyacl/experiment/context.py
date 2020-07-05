@@ -18,7 +18,7 @@ import dask.array as da
 import numpy as np
 from distributed import as_completed, Client
 
-from dpyacl.core import IndexCollection
+from dpyacl.core.collections import IndexCollection
 from dpyacl.core.misc.misc import split, check_X_y
 from dpyacl.core.stop_criteria import AbstractStopCriterion
 from dpyacl.learner import ClassicActiveLearning

@@ -22,9 +22,9 @@ setup(
     ],
     package_dir={
         'dpyacl': 'dpyacl',
-        'dpyacl.learner': 'dpyacl/core',
-        'dpyacl.core': 'dpyacl/experiment',
-        'dpyacl.experiment': 'dpyacl/learner',
+        'dpyacl.core': 'dpyacl/core',
+        'dpyacl.experiment': 'dpyacl/experiment',
+        'dpyacl.learner': 'dpyacl/learner',
         'dpyacl.metrics': 'dpyacl/metrics',
         'dpyacl.oracle': 'dpyacl/oracle',
         'dpyacl.scenario': 'dpyacl/scenario',

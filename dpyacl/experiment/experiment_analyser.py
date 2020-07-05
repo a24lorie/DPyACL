@@ -22,7 +22,7 @@ __all__ = ['BaseAnalyser',
            'ExperimentAnalyserFactory',
            ]
 
-from dpyacl.core import State, StateContainer
+from dpyacl.core.state import State, StateContainer
 
 
 class BaseAnalyser(metaclass=ABCMeta):

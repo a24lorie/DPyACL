@@ -19,8 +19,7 @@ import warnings
 import numpy as np
 import prettytable as pt
 
-from dpyacl.core.collections import BaseCollection
-from dpyacl.core import IndexCollection
+from dpyacl.core.collections import BaseCollection, IndexCollection
 
 __all__ = ['StateItem', 'State', 'StateContainer']
 

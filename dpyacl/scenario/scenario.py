@@ -6,8 +6,8 @@ from dask import compute
 from dask.delayed import delayed
 from distributed import Client
 
-from ..core import IndexCollection
-from ..core import State
+from ..core.collections import IndexCollection
+from ..core.state import State
 from ..metrics.evaluation import BaseMetrics
 from ..oracle import Oracle
 from ..strategies.single_label import QueryInstanceRandom

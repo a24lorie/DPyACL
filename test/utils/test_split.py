@@ -13,7 +13,7 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn.utils.multiclass import unique_labels
 import numpy as np
 
-from dpyacl.core.misc.misc_dask import split
+from dpyacl.core.misc import split
 
 
 class TestSplit(unittest.TestCase):

@@ -6,7 +6,6 @@ Added distributed processing capabilities with Dask
 """
 # Authors: Ying-Peng Tang, Alfredo Lorie
 
-from __future__ import division
 
 import collections
 import copy
@@ -15,7 +14,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from dpyacl.core.misc.misc import randperm
+from dpyacl.core.misc import randperm
 
 __all__ = ['BaseCollection', 'IndexCollection', 'MultiLabelIndexCollection']
 

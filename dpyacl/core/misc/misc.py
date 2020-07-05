@@ -4,14 +4,12 @@ Added distributed processing capabilities with Dask
 """
 
 import collections
-import dask.array as da
 
+import dask.array as da
+import dask_ml.utils as dmlu
 import numpy as np
 from dask import compute
-import dask_ml.utils as dmlu
 from sklearn.utils import validation
-
-from dpyacl.core.collections import BaseCollection
 
 __all__ = ['check_2d_array',
            'randperm',
@@ -143,6 +141,9 @@ def check_one_to_one_correspondence(*args):
         0 : no
         -1: some parameters have the length 1.
     """
+
+    from ..collections import BaseCollection
+
     first_not_none = True
     result = True
     for item in args:
@@ -167,9 +168,12 @@ def check_one_to_one_correspondence(*args):
 
 
 def unpack(*args):
-    """Unpack the list with only one element.
-
     """
+    Unpack the list with only one element.
+    """
+
+    from ..collections import BaseCollection
+
     ret_args = []
     for arg in args:
         if isinstance(arg, (list, np.ndarray, BaseCollection)):
@@ -545,6 +549,9 @@ def check_index_multilabel(index):
     index: list or np.ndarray
         index of the data.
     """
+
+    from ..collections import BaseCollection
+
     if isinstance(index, BaseCollection):
         return index
     if not isinstance(index, (list, np.ndarray)):

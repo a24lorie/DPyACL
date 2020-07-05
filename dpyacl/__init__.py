@@ -1,5 +1,5 @@
 """
-dpyacl.active_learning
+dpyacl
 -------------
 Available subpackages
 ---------------------
