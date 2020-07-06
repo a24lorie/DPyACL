@@ -21,7 +21,7 @@ class TestActiveLearningHMQE(unittest.TestCase):
 
     @classmethod
     def setUp(self):
-        df = pd.read_csv('../../resources/data/hmeq.csv')  # import the dataset
+        df = pd.read_csv('../resources/data/hmeq.csv')  # import the dataset
         df.dropna(axis=0, how='any', inplace=True)
         df = pd.get_dummies(df, columns=['REASON', 'JOB'])
 

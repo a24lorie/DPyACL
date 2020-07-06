@@ -4,13 +4,10 @@ Added support for several performance metrics in a single experiment
 """
 # Authors: Ying-Peng Tang, Alfredo Lorie
 
-from __future__ import division
-
 import collections
 import copy
 import warnings
-from _py_abc import ABCMeta
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 
 import matplotlib.pyplot as plt
 import numpy as np
