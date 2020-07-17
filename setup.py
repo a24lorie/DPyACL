@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='dpyacl',
-    version='0.3',
+    version='0.3.1',
     author='Alfredo Lorie',
     author_email='a24lorie@gmail.com',
     description='Distributed Python Active Learning library',
