@@ -25,7 +25,7 @@ For next versions, we hope to include strategies strategies related with  multi-
 
 # Download
 
-GitHub: <https://github.com/a24lorie/PyACL>
+GitHub: <https://github.com/a24lorie/DPyACL>
 
 # Using DPyACL
 

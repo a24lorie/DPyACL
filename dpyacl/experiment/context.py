@@ -32,7 +32,9 @@ __all__ = ['AbstractExperiment', 'HoldOutExperiment', 'CrossValidationExperiment
 
 class AbstractExperiment(metaclass=ABCMeta):
 
-    def __init__(self, x, y,
+    def __init__(self,
+                 client: Client,
+                 X, Y,
                  ml_technique,
                  scenario_type: AbstractScenario,
                  performance_metrics: [],
@@ -45,13 +47,14 @@ class AbstractExperiment(metaclass=ABCMeta):
         """
         Parameters
         ----------
-        :param x: array-like
+        :param client: distributed.Client
+        :param X: array-like
             Data matrix with [n_samples, n_features]
-        :param y: array-like, optional
+        :param Y: array-like, optional
             labels of given data [n_samples, n_labels] or [n_samples]
+        :param ml_technique
         :param scenario_type: Sub-Type of AbstractScenario
             Type of Active Learning scenario to use
-        :param ml_technique
         :param performance_metrics: array-like of BaseMetrics elements
         :param query_strategy: SinlgeLabelIndexQuery
         :param oracle: Oracle
@@ -76,15 +79,22 @@ class AbstractExperiment(metaclass=ABCMeta):
         :param kwargs: optional
             Extra parameters
         """
-        if type(x) is da.core.Array:
-            self._X = x
-        else:
-            self._X = da.from_array(x, chunks="16MB")
+        self._client = client
 
-        if isinstance(y , da.core.Array):
-            self._Y = y
+        if type(X) is da.core.Array:
+            self._X = X.persist()
         else:
-            self._Y = da.from_array(y, chunks="16MB")
+            self._X = da.from_array(X, chunks=len(X) // 50).persist()
+
+        if isinstance(Y , da.core.Array):
+            self._Y = Y.persist()
+        else:
+            self._Y = da.from_array(Y, chunks=len(Y) // 50).persist()
+
+        # Persists the Dask Storage Structures
+        if client is not None and kwargs.pop("rebalance", False):
+            client.rebalance(self._X)
+            client.rebalance(self._Y)
 
         check_X_y(self._X, self._Y, accept_sparse='csc', multi_output=True, distributed=False)
 
@@ -202,7 +212,9 @@ class AbstractExperiment(metaclass=ABCMeta):
 
 class HoldOutExperiment(AbstractExperiment, metaclass=ABCMeta):
 
-    def __init__(self, X, Y,
+    def __init__(self,
+                 client: Client,
+                 X, Y,
                  scenario_type: AbstractScenario,
                  ml_technique,
                  performance_metrics: [],
@@ -214,6 +226,7 @@ class HoldOutExperiment(AbstractExperiment, metaclass=ABCMeta):
         """
         Parameters
         ----------
+        :param client: distributed.Client
         :param X: array-like
             Data matrix with [n_samples, n_features]
         :param Y: array-like, optional
@@ -229,7 +242,8 @@ class HoldOutExperiment(AbstractExperiment, metaclass=ABCMeta):
         :param kwargs: optional
             Extra parameters
         """
-        super().__init__(x=X, y=Y,
+        super().__init__(client=client,
+                         X=X, Y=Y,
                          scenario_type=scenario_type,
                          ml_technique=ml_technique,
                          performance_metrics=performance_metrics,
@@ -259,7 +273,9 @@ class HoldOutExperiment(AbstractExperiment, metaclass=ABCMeta):
 
 class CrossValidationExperiment(AbstractExperiment, metaclass=ABCMeta):
 
-    def __init__(self, X, Y,
+    def __init__(self,
+                 client: Client,
+                 X, Y,
                  scenario_type: AbstractScenario,
                  ml_technique,
                  performance_metrics: [],
@@ -272,6 +288,7 @@ class CrossValidationExperiment(AbstractExperiment, metaclass=ABCMeta):
         """
         Parameters
         ----------
+        :param client: distributed.Client
         :param X: array-like
             Data matrix with [n_samples, n_features]
         :param Y: array-like, optional
@@ -288,7 +305,8 @@ class CrossValidationExperiment(AbstractExperiment, metaclass=ABCMeta):
         :param kwargs: optional
             Extra parameters
         """
-        super().__init__(x=X, y=Y,
+        super().__init__(client=client,
+                         X=X, Y=Y,
                          scenario_type=scenario_type,
                          ml_technique=ml_technique,
                          performance_metrics=performance_metrics,
@@ -305,7 +323,7 @@ class CrossValidationExperiment(AbstractExperiment, metaclass=ABCMeta):
         print('Thread %s ->  Finished:' % ordinal)
         return ordinal
 
-    def evaluate(self, client: str = None, **kwargs):
+    def evaluate(self, client: Client = None, rebalance = False, **kwargs):
 
         import tracemalloc
         tracemalloc.start()
@@ -316,39 +334,25 @@ class CrossValidationExperiment(AbstractExperiment, metaclass=ABCMeta):
         folds = []
 
         if multithread:
-            if client is None:
-                max_threads = kwargs.pop('max_threads', os.cpu_count() if os.cpu_count() is not None else 5)
+            max_threads = kwargs.pop('max_threads', os.cpu_count() if os.cpu_count() is not None else 5)
 
-                # with mp.get_context("spawn").Pool(processes=max_threads) as pool:
-                with mp.get_context("spawn").Pool(processes=max_threads) as pool:
-                    for k in range(self._kfolds):
-                        # foldExec = pool.apply_async(self.call_script, args=(k, ))
+            with mp.get_context("spawn").Pool(processes=max_threads) as pool:
+                for k in range(self._kfolds):
+                    # foldExec = pool.apply_async(self.call_script, args=(k, ))
 
-                        foldExec = pool.apply_async(
-                            ClassicActiveLearning(
-                                scenario=copy.deepcopy(self._scenario),
-                                stopping_criteria=copy.deepcopy(self._stopping_criteria)
-                            ).execute,
-                            args=(),
-                            kwds=kwargs
-                        )
-                        folds.append(foldExec)
+                    foldExec = pool.apply_async(
+                        ClassicActiveLearning(
+                            scenario=copy.deepcopy(self._scenario),
+                            stopping_criteria=copy.deepcopy(self._stopping_criteria)
+                        ).execute,
+                        args=(),
+                        kwds=kwargs
+                    )
+                    folds.append(foldExec)
 
-                    output = [p.get() for p in folds]
+                output = [p.get() for p in folds]
 
-                return map(lambda item: [item], output)
-            else:
-                # initial 10 random points
-                futures = [client.submit(
-                                ClassicActiveLearning(
-                                    scenario=copy.deepcopy(self._scenario),
-                                    stopping_criteria=copy.deepcopy(self._stopping_criteria)
-                                ).execute, kwargs) for k in range(self._kfolds)]
-                iterator = as_completed(futures)
-
-                for res in iterator:
-                    folds.append(res.result())
-                return map(lambda item: [item], folds)
+            return map(lambda item: [item], output)
         else:
             # Loop through the files, and run the parse function for each file, sending the file-name to it, along with the kwargs of parser_variables.
             # The results of the functions can come back in any order.

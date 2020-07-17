@@ -1,0 +1,8 @@
+1. activate the virtual enviroment
+>>> source Documents/WORKSPACES/WorkspaceUIMP/trabajo_fin_master/venv/bin/activate
+
+2. start the Dask Scheduler
+>>> dask-scheduler
+
+2. start the Dask worker
+>>> dask-worker 'tcp://ip:8786' --memory-limit 3GB --nthreads 2
