@@ -5,7 +5,7 @@
                                May 2020
 			    Alfredo Lorie Bernardo							
 
-                             version 0.3
+                             version 0.3.1
 
 ***
 
