@@ -43,6 +43,7 @@ class AbstractExperiment(metaclass=ABCMeta):
                  stopping_criteria: AbstractStopCriterion,
                  self_partition: bool,
                  kfolds: int = 1,
+                 batch_size = 1,
                  **kwargs):
         """
         Parameters
@@ -202,7 +203,8 @@ class AbstractExperiment(metaclass=ABCMeta):
             ml_technique=self._ml_technique,
             performance_metrics=self._performance_metrics,
             query_strategy=self._query_strategy,
-            oracle=self._oracle
+            oracle=self._oracle,
+            batch_size = batch_size
         )
 
     @abstractmethod
@@ -222,6 +224,7 @@ class HoldOutExperiment(AbstractExperiment, metaclass=ABCMeta):
                  oracle: Oracle,
                  stopping_criteria: AbstractStopCriterion,
                  self_partition: bool,
+                 batch_size=1,
                  **kwargs):
         """
         Parameters
@@ -252,6 +255,7 @@ class HoldOutExperiment(AbstractExperiment, metaclass=ABCMeta):
                          stopping_criteria=stopping_criteria,
                          self_partition=self_partition,
                          kfolds=1,
+                         batch_size = batch_size,
                          **kwargs)
 
     def evaluate(self, client: Client = None, **kwargs):
@@ -284,6 +288,7 @@ class CrossValidationExperiment(AbstractExperiment, metaclass=ABCMeta):
                  stopping_criteria: AbstractStopCriterion,
                  self_partition: bool,
                  kfolds=5,
+                 batch_size=1,
                  **kwargs):
         """
         Parameters
@@ -315,6 +320,7 @@ class CrossValidationExperiment(AbstractExperiment, metaclass=ABCMeta):
                          stopping_criteria=stopping_criteria,
                          self_partition=self_partition,
                          kfolds=kfolds,
+                         batch_size=batch_size,
                          **kwargs)
 
     def call_script(self, ordinal):

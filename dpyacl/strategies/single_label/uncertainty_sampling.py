@@ -9,7 +9,7 @@ Uncertainty Sampling strategies implementation
 Added distributed processing capabilities with Dask
 Modified implementation with an Object Oriented design
 """
-# Authors: Ying-Peng Tang, Alfredo Lorie
+# Authors: Alfredo Lorie extended from Ying-Peng Tang version
 
 from abc import ABCMeta
 
@@ -45,11 +45,11 @@ class QueryEntropySampling(InstanceUncertaintyStrategy, metaclass=ABCMeta):
     def query_function_name(self):
         return "EntropySampling"
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
-        unlabel_idx, pv = super().select(X, y, label_index, unlabel_index, model=model, client=client)
-        return self._select_by_prediction(unlabel_index=unlabel_idx, predict=pv)
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
+        unlabel_idx, pv = super().select(X, y, label_index, unlabel_index, batch_size=batch_size, model=model, client=client)
+        return self._select_by_prediction(unlabel_index=unlabel_idx, predict=pv, batch_size= batch_size)
 
-    def _select_by_prediction(self, unlabel_index, predict):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
         super()._select_by_prediction(unlabel_index, predict)
 
         # calc entropy
@@ -60,7 +60,7 @@ class QueryEntropySampling(InstanceUncertaintyStrategy, metaclass=ABCMeta):
             entro.append(delayed(sum)(vec * da.log(vec)))
 
         tpl = da.from_array(unlabel_index)
-        return tpl[nlargestarg(delayed(entro).compute(), self._batch_size)].compute()
+        return tpl[nlargestarg(delayed(entro).compute(), batch_size)].compute()
 
 
 class QueryLeastConfidentSampling(InstanceUncertaintyStrategy, metaclass=ABCMeta):
@@ -74,11 +74,11 @@ class QueryLeastConfidentSampling(InstanceUncertaintyStrategy, metaclass=ABCMeta
     def query_function_name(self):
         return "LeastConfidentSampling"
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
-        unlabel_idx, pv = super().select(X, y, label_index, unlabel_index, model=model, client=client)
-        return self._select_by_prediction(unlabel_index=unlabel_idx, predict=pv)
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
+        unlabel_idx, pv = super().select(X, y, label_index, unlabel_index, batch_size=batch_size, model=model, client=client)
+        return self._select_by_prediction(unlabel_index=unlabel_idx, predict=pv, batch_size= batch_size)
 
-    def _select_by_prediction(self, unlabel_index, predict):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
         """Select indexes from the unlabel_index for querying.
 
         Parameters
@@ -101,7 +101,7 @@ class QueryLeastConfidentSampling(InstanceUncertaintyStrategy, metaclass=ABCMeta
         # calc least_confident
         pat = predict.map_blocks(lambda vec: np.sort(vec))
         tpl = da.from_array(unlabel_index)
-        return tpl[nlargestarg(1 - pat[:, predict_shape[1] - 1], self._batch_size)].compute()
+        return tpl[nlargestarg(1 - pat[:, predict_shape[1] - 1], batch_size)].compute()
 
 
 class QueryMarginSampling(InstanceUncertaintyStrategy, metaclass=ABCMeta):
@@ -116,19 +116,19 @@ class QueryMarginSampling(InstanceUncertaintyStrategy, metaclass=ABCMeta):
     def query_function_name(self):
         return "MarginSamplingQuery"
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
-        unlabel_idx, pv = super().select(X, y, label_index, unlabel_index, model=model, client=client)
-        return self._select_by_prediction(unlabel_index=unlabel_idx, predict=pv)
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
+        unlabel_idx, pv = super().select(X, y, label_index, unlabel_index, batch_size=batch_size, model=model, client=client)
+        return self._select_by_prediction(unlabel_index=unlabel_idx, predict=pv, batch_size=batch_size)
 
-    def _select_by_prediction(self, unlabel_index, predict):
-        super()._select_by_prediction(unlabel_index, predict)
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
+        super()._select_by_prediction(unlabel_index, predict, batch_size=batch_size)
         predict_shape = np.shape(predict)
 
         # calc margin
         pat = predict.map_blocks(lambda vec: np.sort(vec))
         tpl = da.from_array(unlabel_index)
         return tpl[
-            nlargestarg(pat[:, predict_shape[1] - 2] - pat[:, predict_shape[1] - 1], self._batch_size)].compute()
+            nlargestarg(pat[:, predict_shape[1] - 2] - pat[:, predict_shape[1] - 1], batch_size)].compute()
 
 
 class QueryDistanceToBoundarySampling(InstanceUncertaintyStrategy, metaclass=ABCMeta):
@@ -143,7 +143,7 @@ class QueryDistanceToBoundarySampling(InstanceUncertaintyStrategy, metaclass=ABC
     def query_function_name(self):
         return "DistanceToBoundary"
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
         if not hasattr(model, 'decision_function'):
             raise TypeError(
                 'model object must implement decision_function methods in distance_to_boundary measure.')
@@ -153,9 +153,11 @@ class QueryDistanceToBoundarySampling(InstanceUncertaintyStrategy, metaclass=ABC
 
         return self._select_by_prediction(
                             unlabel_index=unlabel_idx,
-                            predict=da.from_array(model.decision_function(unlabel_data)))
+                            predict=da.from_array(model.decision_function(unlabel_data)),
+                            batch_size=batch_size
+        )
 
-    def _select_by_prediction(self, unlabel_index, predict):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
         predict_shape = da.shape(predict)
 
         assert (len(predict_shape) in [1, 2])
@@ -168,4 +170,4 @@ class QueryDistanceToBoundarySampling(InstanceUncertaintyStrategy, metaclass=ABC
             pv = da.absolute(predict)
 
         tpl = da.from_array(unlabel_index)
-        return tpl[nsmallestarg(pv, self._batch_size)].compute()
+        return tpl[nsmallestarg(pv, batch_size)].compute()

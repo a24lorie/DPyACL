@@ -33,7 +33,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
 
     __ml_technique = LogisticRegression(solver='sag')
     __performance_metrics = [Accuracy(), Recall()]
-
+    __batch_size = 5
     __client = Client("tcp://192.168.2.100:8786")
 
     def test_random_query(self):
@@ -42,8 +42,9 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
@@ -71,14 +72,52 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
         # get a brief description of the experiment
         query_analyser.plot_learning_curves(title='Active Learning experiment results')
 
+    def test_random_query_batch_size(self):
+
+        query_strategy = QueryInstanceRandom()
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=self.__ml_technique,
+            performance_metrics=self.__performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True,
+            batch_size=self.__batch_size
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client=self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+                            performance_metrics= [metric.metric_name for metric in self.__performance_metrics],
+                            method_name=query_strategy.query_function_name,
+                            method_results=result,
+                            type="queries"
+                        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
     def test_query_entropy_sampling(self):
 
         query_strategy = QueryEntropySampling()
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
@@ -89,6 +128,43 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             test_ratio=0.3,
             initial_label_rate=0.05,
             all_class=True
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client=self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+            performance_metrics=[metric.metric_name for metric in self.__performance_metrics],
+            method_name=query_strategy.query_function_name,
+            method_results=result,
+            type="queries"
+        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
+    def test_query_entropy_sampling_batch_size(self):
+
+        query_strategy = QueryEntropySampling()
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=self.__ml_technique,
+            performance_metrics=self.__performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            stopping_criteria=UnlabelSetEmpty(),
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True,
+            batch_size=self.__batch_size
         )
 
         start_time = time.time()
@@ -112,8 +188,9 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
@@ -124,6 +201,43 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             test_ratio=0.3,
             initial_label_rate=0.05,
             all_class=True
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client=self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+            performance_metrics=[metric.metric_name for metric in self.__performance_metrics],
+            method_name=query_strategy.query_function_name,
+            method_results=result,
+            type="queries"
+        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
+    def test_query_least_confident_sampling_batch_size(self):
+
+        query_strategy = QueryLeastConfidentSampling()
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=self.__ml_technique,
+            performance_metrics=self.__performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            stopping_criteria=UnlabelSetEmpty(),
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True,
+            batch_size=self.__batch_size
         )
 
         start_time = time.time()
@@ -147,8 +261,9 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
@@ -176,14 +291,52 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
         # get a brief description of the experiment
         query_analyser.plot_learning_curves(title='Active Learning experiment results')
 
+    def test_query_margin_sampling_batch_size(self):
+
+        query_strategy = QueryMarginSampling()
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=self.__ml_technique,
+            performance_metrics=self.__performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            stopping_criteria=UnlabelSetEmpty(),
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True,
+            batch_size=self.__batch_size
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client=self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+            performance_metrics=[metric.metric_name for metric in self.__performance_metrics],
+            method_name=query_strategy.query_function_name,
+            method_results=result,
+            type="queries"
+        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
     def test_query_distance_to_boundary_sampling(self):
 
         query_strategy = QueryDistanceToBoundarySampling()
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
@@ -194,6 +347,43 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             test_ratio=0.3,
             initial_label_rate=0.05,
             all_class=True
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client=self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+            performance_metrics=[metric.metric_name for metric in self.__performance_metrics],
+            method_name=query_strategy.query_function_name,
+            method_results=result,
+            type="queries"
+        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
+    def test_query_distance_to_boundary_sampling_batch_size(self):
+
+        query_strategy = QueryDistanceToBoundarySampling()
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=self.__ml_technique,
+            performance_metrics=self.__performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            stopping_criteria=UnlabelSetEmpty(),
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True,
+            batch_size=self.__batch_size
         )
 
         start_time = time.time()
@@ -232,8 +422,9 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
                    + WhiteKernel(noise_level=1, noise_level_bounds=(1e-10, 1e+1)))
 
         experiment = HoldOutExperiment(
-            X,
-            y,
+            client=self.__client,
+            X=X,
+            Y=y,
             scenario_type=PoolBasedSamplingScenario,
             train_idx=train_idx,
             test_idx=test_idx,
@@ -261,14 +452,67 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             plt.title('Initial estimation')
             plt.show()
 
+    def test_query_regression_std_batch_size(self):
+
+        # Get the data
+        X = np.random.choice(np.linspace(0, 20, 1000), size=100, replace=False).reshape(-1, 1)
+        y = np.sin(X) + np.random.normal(scale=0.3, size=X.shape)
+
+        # assembling initial training set
+        train_idx, test_idx, label_idx, unlabel_idx = split(
+            X=X,
+            y=y,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            split_count=1,
+            all_class=True)
+
+        # defining the kernel for the Gaussian process
+        ml_technique = GaussianProcessRegressor(
+            kernel=RBF(length_scale=1.0, length_scale_bounds=(1e-2, 1e3)) \
+                   + WhiteKernel(noise_level=1, noise_level_bounds=(1e-10, 1e+1)))
+
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=X,
+            Y=y,
+            scenario_type=PoolBasedSamplingScenario,
+            train_idx=train_idx,
+            test_idx=test_idx,
+            label_idx=label_idx,
+            unlabel_idx=unlabel_idx,
+            ml_technique=ml_technique,
+            performance_metrics=[Mse(squared=True)],
+            query_strategy=QueryRegressionStd(),
+            oracle=SimulatedOracleQueryIndex(labels=y),
+            stopping_criteria=PercentOfUnlabel(value=70),
+            self_partition=False,
+            batch_size=self.__batch_size
+        )
+
+        result = experiment.evaluate(verbose=True)
+        regressor = result[0].ml_technique
+
+        # plotting the initial estimation
+        with plt.style.context('seaborn-white'):
+            plt.figure(figsize=(14, 7))
+            x = np.linspace(0, 20, 1000)
+            pred, std = regressor.predict(x.reshape(-1, 1), return_std=True)
+            plt.plot(x, pred)
+            plt.fill_between(x, pred.reshape(-1, ) - std, pred.reshape(-1, ) + std, alpha=0.2)
+            plt.scatter(X, y, c='k')
+            plt.title('Initial estimation')
+            plt.show()
+
     def test_query_cero_one_loss(self):
 
         query_strategy = QueryExpectedCeroOneLoss()
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
@@ -279,6 +523,43 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             test_ratio=0.3,
             initial_label_rate=0.05,
             all_class=True
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client=self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+            performance_metrics=[metric.metric_name for metric in self.__performance_metrics],
+            method_name=query_strategy.query_function_name,
+            method_results=result,
+            type="queries"
+        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
+    def test_query_cero_one_loss_batch_size(self):
+
+        query_strategy = QueryExpectedCeroOneLoss()
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=self.__ml_technique,
+            performance_metrics=self.__performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            stopping_criteria=MaxIteration(5),
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True,
+            batch_size=self.__batch_size,
         )
 
         start_time = time.time()
@@ -302,8 +583,9 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
@@ -331,14 +613,52 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
         # get a brief description of the experiment
         query_analyser.plot_learning_curves(title='Active Learning experiment results')
 
+    def test_query_log_loss_batch_size(self):
+
+        query_strategy = QueryExpectedLogLoss()
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=self.__ml_technique,
+            performance_metrics=self.__performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            stopping_criteria=MaxIteration(5),
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True,
+            batch_size=self.__batch_size
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client=self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+            performance_metrics=[metric.metric_name for metric in self.__performance_metrics],
+            method_name=query_strategy.query_function_name,
+            method_results=result,
+            type="queries"
+        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
     def test_vote_entropy(self):
 
         query_strategy = QueryVoteEntropy(n_jobs=5)
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
@@ -366,14 +686,52 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
         # get a brief description of the experiment
         query_analyser.plot_learning_curves(title='Active Learning experiment results')
 
+    def test_vote_entropy_batch_size(self):
+
+        query_strategy = QueryVoteEntropy(n_jobs=5)
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=self.__ml_technique,
+            performance_metrics=self.__performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True,
+            batch_size=self.__batch_size
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client=self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+            performance_metrics=[metric.metric_name for metric in self.__performance_metrics],
+            method_name=query_strategy.query_function_name,
+            method_results=result,
+            type="queries"
+        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
     def test_kullback_leibler_divergence(self):
 
         query_strategy = QueryKullbackLeiblerDivergence(n_jobs=5)
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
@@ -384,6 +742,43 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             test_ratio=0.3,
             initial_label_rate=0.05,
             all_class=True
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client=self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+            performance_metrics=[metric.metric_name for metric in self.__performance_metrics],
+            method_name=query_strategy.query_function_name,
+            method_results=result,
+            type="queries"
+        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
+    def test_kullback_leibler_divergence_batch_size(self):
+
+        query_strategy = QueryKullbackLeiblerDivergence(n_jobs=5)
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=self.__ml_technique,
+            performance_metrics=self.__performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True,
+            batch_size=self.__batch_size
         )
 
         start_time = time.time()

@@ -38,15 +38,6 @@ class BaseQueryStrategy(metaclass=ABCMeta):
     Base strategies class.
     """
 
-    def __init__(self, batch_size=1):
-        """
-
-        :param batch_size: int, default=1
-            Selection batch size.
-        """
-        assert (batch_size > 0)
-        self._batch_size = batch_size
-
     @property
     @abstractmethod
     def query_function_name(self):
@@ -71,7 +62,7 @@ class SinlgeLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def select(self, X, y, label_index, unlabel_index, **kwargs):
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, **kwargs):
         """
         Select instances to strategies
 
@@ -85,7 +76,12 @@ class SinlgeLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
             The indexes of labeled samples.
         :param unlabel_index: {list, np.ndarray, IndexCollection}
             The indexes of unlabeled samples.
+        :param batch_size: int, default=1
+            Selection batch size.
         """
+
+        if batch_size <= 0:
+            raise Exception('batch_size param must be greater or equal than 1 ')
 
         if X is not None and y is not None:
             check_X_y(X, y, accept_sparse='csc', multi_output=True)
@@ -123,9 +119,9 @@ class SinlgeLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
             return model.predict(unlabel_x, kwargs)
 
     @abstractmethod
-    def _select_by_prediction(self, unlabel_index, predict, **kwargs):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1, **kwargs):
         """
-        Perform basic validation for indexes selection for queryin
+        Perform basic validation for indexes selection for querying
 
         Parameters
         ----------
@@ -137,10 +133,13 @@ class SinlgeLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
         :param kwargs: optional
         """
 
-        assert (self._batch_size > 0)
+        if batch_size <= 0:
+            raise Exception('batch_size param must be greater or equal than 1 ')
+
         assert (isinstance(unlabel_index, collections.abc.Iterable))
         unlabel_index = np.asarray(unlabel_index)
-        if len(unlabel_index) <= self._batch_size:
+
+        if len(unlabel_index) <= batch_size:
             return unlabel_index
 
         predict_shape = da.shape(predict)
@@ -168,7 +167,7 @@ class InstanceUncertaintyStrategy(SinlgeLabelIndexQuery, metaclass=ABCMeta):
     def query_function_name(self):
         return "InstanceUncertaintyStrategy"
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
         """
         Select indexes from the unlabel_index for querying.
 
@@ -182,6 +181,7 @@ class InstanceUncertaintyStrategy(SinlgeLabelIndexQuery, metaclass=ABCMeta):
             The indexes of labeled samples.
         :param unlabel_index: {list, np.ndarray, IndexCollection}
             The indexes of unlabeled samples.
+        :param batch_size:
         :param model: object, optional (default=None)
             Current classification model, should have the 'predict_proba' method for probabilistic output.
             If not provided, LogisticRegression with default parameters implemented by sklearn will be used.
@@ -200,13 +200,8 @@ class InstanceUncertaintyStrategy(SinlgeLabelIndexQuery, metaclass=ABCMeta):
         if model is None:
             raise Exception('Model is not provided.')
 
-        assert (self._batch_size > 0)
         assert (isinstance(unlabel_index, collections.abc.Iterable))
         unlabel_index = np.asarray(unlabel_index)
-
-        # # TODO cambiar
-        # if len(unlabel_index) <= self._batch_size:
-        #     return unlabel_index
 
         return unlabel_index, self._get_pred(X[unlabel_index, :], model, proba=True)
 
@@ -252,7 +247,7 @@ class ExpectedErrorReductionStrategy(SinlgeLabelIndexQuery, metaclass=ABCMeta):
         """
         pass
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
         """
         Select indexes from the unlabel_index for querying.
 
@@ -278,12 +273,14 @@ class ExpectedErrorReductionStrategy(SinlgeLabelIndexQuery, metaclass=ABCMeta):
             The selected indexes which is a subset of unlabel_index.
         """
 
+        if batch_size <= 0:
+            raise Exception('batch_size param must be greater or equal than 1 ')
+
         assert (isinstance(unlabel_index, collections.Iterable))
         assert (isinstance(label_index, collections.Iterable))
 
-        #  TODO cambiar
-        # if len(unlabel_index) <= self._batch_size:
-        #     return unlabel_index
+        if len(unlabel_index) <= batch_size:
+            return unlabel_index
 
         if X is None or y is None:
             raise Exception('Data matrix is not provided.')
@@ -354,14 +351,12 @@ class QueryByCommitteeStategy(SinlgeLabelIndexQuery):
         pages 1-9. Morgan Kaufmann, 1998.
     """
 
-    def __init__(self, batch_size=1, n_jobs=None):
+    def __init__(self, n_jobs=None):
         """
 
         :param batch_size: int, default=1
             Selection batch size.
         """
-        assert (batch_size > 0)
-        self._batch_size = batch_size
         self._n_jobs = n_jobs
 
     @property
@@ -372,7 +367,7 @@ class QueryByCommitteeStategy(SinlgeLabelIndexQuery):
     def agreement(self, estimators):
         pass
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
         """Select indexes from the unlabel_index for querying.
 
         Parameters
@@ -395,16 +390,14 @@ class QueryByCommitteeStategy(SinlgeLabelIndexQuery):
         selected_idx: list
             The selected indexes which is a subset of unlabel_index.
         """
+        if batch_size <= 0:
+            raise Exception('batch_size param must be greater or equal than 1 ')
 
-        assert (self._batch_size > 0)
         assert (isinstance(unlabel_index, collections.Iterable))
         assert (isinstance(label_index, collections.Iterable))
 
         label_index = np.asarray(label_index)
         unlabel_index = np.asarray(unlabel_index)
-
-        if len(unlabel_index) <= self._batch_size:
-            return unlabel_index
 
         if X is None or y is None:
             raise Exception('Data matrix is not provided, use select_by_prediction_mat() instead.')
@@ -427,7 +420,7 @@ class QueryByCommitteeStategy(SinlgeLabelIndexQuery):
 
         return unlabel_index, bagging.estimators_
 
-    def _select_by_prediction(self, unlabel_index, predict):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size):
         """
         Perform basic validation for indexes selection for queryin
 
@@ -440,7 +433,11 @@ class QueryByCommitteeStategy(SinlgeLabelIndexQuery):
             The prediction matrix for the unlabeled set.
         :param kwargs: optional
         """
-        return unlabel_index[tuple(nlargestarg(predict, self._batch_size))]
+        if batch_size <= 0:
+            raise Exception('batch_size param must be greater or equal than 1 ')
+
+        tpl = da.from_array(unlabel_index)
+        return tpl[nlargestarg(predict, batch_size)].compute()
 
     @staticmethod
     def check_committee_results(estimators):

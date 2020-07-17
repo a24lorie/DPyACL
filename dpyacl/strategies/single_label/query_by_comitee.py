@@ -7,7 +7,7 @@ Query By Comittee strategies implementation
 Added distributed processing capabilities with Dask
 Modified implementation with an Object Oriented design
 """
-# Authors: Ying-Peng Tang, Alfredo Lorie
+# Authors: Alfredo Lorie extended from Ying-Peng Tang version
 
 import collections
 from abc import ABCMeta
@@ -76,13 +76,14 @@ class QueryVoteEntropy(QueryByCommitteeStategy, metaclass=ABCMeta):
 
         return compute(score)[0]
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
         unlabel_index = np.asarray(unlabel_index)
-        innner_unlabel_index, estimators = super().select(X, y, label_index, unlabel_index, model=model, client=client)
+        innner_unlabel_index, estimators = super().select(X, y, label_index, unlabel_index, batch_size=batch_size, model=model, client=client)
         return self._select_by_prediction(unlabel_index=innner_unlabel_index,
-                                          predict=self.agreement([estimator.predict(X[unlabel_index, :]) for estimator in estimators]))
+                                          predict=self.agreement([estimator.predict(X[unlabel_index, :]) for estimator in estimators]),
+                                          batch_size=batch_size)
 
-    def _select_by_prediction(self, unlabel_index, predict):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
         """
         Perform basic validation for indexes selection for queryin
 
@@ -94,7 +95,7 @@ class QueryVoteEntropy(QueryByCommitteeStategy, metaclass=ABCMeta):
         :param predict: array, [n_samples, n_classes]
             The prediction matrix for the unlabeled set.
         """
-        return super()._select_by_prediction(unlabel_index, predict)
+        return super()._select_by_prediction(unlabel_index, predict, batch_size=batch_size)
 
 
 class QueryKullbackLeiblerDivergence(QueryByCommitteeStategy, metaclass=ABCMeta):
@@ -139,14 +140,15 @@ class QueryKullbackLeiblerDivergence(QueryByCommitteeStategy, metaclass=ABCMeta)
                 "A 2D probabilistic prediction matrix must be provided, with the shape like [n_samples, n_class]")
         return compute(score)[0]
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
+    def select(self, X, y, label_index, unlabel_index, model=None, batch_size=1, client: Client = None):
         unlabel_index = np.asarray(unlabel_index)
-        innner_unlabel_index, estimators = super().select(X, y, label_index, unlabel_index, model=model, client=client)
+        innner_unlabel_index, estimators = super().select(X, y, label_index, unlabel_index, batch_size=batch_size, model=model, client=client)
         return self._select_by_prediction(unlabel_index=innner_unlabel_index,
                                           predict=self.agreement(
-                                              [estimator.predict_proba(X[unlabel_index, :]) for estimator in estimators]))
+                                              [estimator.predict_proba(X[unlabel_index, :]) for estimator in estimators]),
+                                          batch_size=batch_size)
 
-    def _select_by_prediction(self, unlabel_index, predict):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
         """
         Perform basic validation for indexes selection for queryin
 
@@ -158,4 +160,4 @@ class QueryKullbackLeiblerDivergence(QueryByCommitteeStategy, metaclass=ABCMeta)
         :param predict: array, [n_samples, n_classes]
             The prediction matrix for the unlabeled set.
         """
-        return super()._select_by_prediction(unlabel_index, predict)
+        return super()._select_by_prediction(unlabel_index, predict, batch_size=batch_size)

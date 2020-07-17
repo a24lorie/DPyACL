@@ -7,7 +7,7 @@ Error reduction query strategies implementation
 Added distributed processing capabilities with Dask
 Modified implementation with an Object Oriented design
 """
-# Authors: Ying-Peng Tang, Alfredo Lorie
+# Authors: Alfredo Lorie extended from Ying-Peng Tang version
 
 
 import collections
@@ -57,11 +57,11 @@ class QueryExpectedCeroOneLoss(ExpectedErrorReductionStrategy, metaclass=ABCMeta
                 log_loss.append(delayed(1 - p ))
         return delayed(sum)(log_loss).compute()
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client:Client = None):
-        innner_unlabel_index, scores = super().select(X, y, label_index, unlabel_index, model=model, client=client)
-        return self._select_by_prediction(unlabel_index=innner_unlabel_index, predict=scores)
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client:Client = None):
+        innner_unlabel_index, scores = super().select(X, y, label_index, unlabel_index, batch_size=batch_size, model=model, client=client)
+        return self._select_by_prediction(unlabel_index=innner_unlabel_index, predict=scores, batch_size=batch_size)
 
-    def _select_by_prediction(self, unlabel_index, predict):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
         """
         Perform basic validation for indexes selection for queryin
 
@@ -74,8 +74,11 @@ class QueryExpectedCeroOneLoss(ExpectedErrorReductionStrategy, metaclass=ABCMeta
             The prediction matrix for the unlabeled set.
         :param kwargs: optional
         """
+        if batch_size <= 0:
+            raise Exception('batch_size param must be greater or equal than 1 ')
 
-        return unlabel_index[tuple(nsmallestarg(predict, self._batch_size))]
+        tpl = da.from_array(unlabel_index)
+        return tpl[nsmallestarg(predict, batch_size)].compute()
 
 
 class QueryExpectedLogLoss(ExpectedErrorReductionStrategy, metaclass=ABCMeta):
@@ -106,11 +109,11 @@ class QueryExpectedLogLoss(ExpectedErrorReductionStrategy, metaclass=ABCMeta):
                 log_loss. append(delayed(p * da.log(p)))
         return delayed(sum)(log_loss).compute()
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client:Client = None):
-        innner_unlabel_index, scores = super().select(X, y, label_index, unlabel_index, model=model, client=client)
-        return self._select_by_prediction(unlabel_index=innner_unlabel_index, predict=scores)
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client:Client = None):
+        innner_unlabel_index, scores = super().select(X, y, label_index, unlabel_index, batch_size=batch_size, model=model, client=client)
+        return self._select_by_prediction(unlabel_index=innner_unlabel_index, predict=scores, batch_size=batch_size)
 
-    def _select_by_prediction(self, unlabel_index, predict):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
         """
         Perform basic validation for indexes selection for queryin
 
@@ -123,8 +126,11 @@ class QueryExpectedLogLoss(ExpectedErrorReductionStrategy, metaclass=ABCMeta):
             The prediction matrix for the unlabeled set.
         :param kwargs: optional
         """
+        if batch_size <= 0:
+            raise Exception('batch_size param must be greater or equal than 1 ')
 
-        return unlabel_index[tuple(nsmallestarg(predict, self._batch_size))]
+        tpl = da.from_array(unlabel_index)
+        return tpl[nsmallestarg(predict, batch_size)].compute()
 
 
 class QueryRegressionStd(SinlgeLabelIndexQuery, metaclass=ABCMeta):
@@ -135,7 +141,7 @@ class QueryRegressionStd(SinlgeLabelIndexQuery, metaclass=ABCMeta):
     def query_function_name(self):
         return "QueryRegressionStd"
 
-    def select(self, X, y, label_index, unlabel_index, model=None, client: Client = None):
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
         """Select indexes randomly.
         Parameters
         ----------
@@ -151,7 +157,7 @@ class QueryRegressionStd(SinlgeLabelIndexQuery, metaclass=ABCMeta):
         selected_idx: list
             The selected indexes which is a subset of unlabel_index.
         """
-        super().select(X, y, label_index, unlabel_index, model=model)
+        super().select(X, y, label_index, unlabel_index, batch_size=batch_size, model=model)
 
         if X is None:
             raise Exception('Data matrix is not provided')
@@ -159,21 +165,20 @@ class QueryRegressionStd(SinlgeLabelIndexQuery, metaclass=ABCMeta):
         if model is None:
             raise Exception('Model is not provided.')
 
-        assert (self._batch_size > 0)
         assert (isinstance(unlabel_index, collections.abc.Iterable))
         unlabel_index = np.asarray(unlabel_index)
-
-        if len(unlabel_index) <= self._batch_size:
-            return unlabel_index
-
         unlabel_x = X[unlabel_index, :]
 
         pred, std = self._get_pred(unlabel_x, model, proba=False, return_std=True)
         return self._select_by_prediction(unlabel_index=unlabel_index,
                                           predict=da.from_array(functools.reduce(operator.iconcat, pred, [])),
+                                          batch_size=batch_size,
                                           std=da.from_array(std))
 
-    def _select_by_prediction(self, unlabel_index, predict, **kwargs):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1, **kwargs):
+
+        if batch_size <= 0:
+            raise Exception('batch_size param must be greater or equal than 1 ')
 
         predict_shape = np.shape(predict)
         assert (len(predict_shape) in [1, 2])
@@ -183,4 +188,4 @@ class QueryRegressionStd(SinlgeLabelIndexQuery, metaclass=ABCMeta):
             raise ValueError("")
         else:
             tpl = da.from_array(unlabel_index)
-            return tpl[nlargestarg(std, self._batch_size)].compute()
+            return tpl[nlargestarg(std, batch_size)].compute()

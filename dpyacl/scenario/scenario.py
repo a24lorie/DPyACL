@@ -13,7 +13,7 @@ from ..oracle import Oracle
 from ..strategies.single_label import QueryInstanceRandom
 from ..strategies.stategies import SinlgeLabelIndexQuery
 
-__all__ = ['AbstractScenario', 'PoolBasedSamplingScenario']
+__all__ = ['AbstractScenario', 'PoolBasedSamplingScenario', 'StreamBasedSelectiveSamplingScenario']
 
 
 class AbstractScenario(metaclass=ABCMeta):
@@ -76,6 +76,9 @@ class AbstractScenario(metaclass=ABCMeta):
                      initial_point=initial_point, check_flag=check_flag,
                      verbose=verbose, print_interval=print_interval)
 
+    def remainingUnlabeledInstances(self):
+        return len(self._unlabel_idx) > 0
+
     @abstractmethod
     def executeLabeledTraining(self, client: Client = None):
         pass
@@ -94,6 +97,85 @@ class AbstractScenario(metaclass=ABCMeta):
 
 
 class PoolBasedSamplingScenario(AbstractScenario, metaclass=ABCMeta):
+
+    def __init__(self,
+                 X, y,
+                 train_idx,
+                 test_idx,
+                 label_idx: IndexCollection,
+                 unlabel_idx: IndexCollection,
+                 ml_technique,
+                 performance_metrics: [],
+                 query_strategy: SinlgeLabelIndexQuery,
+                 oracle: Oracle = None,
+                 batch_size=1,
+                 **kwargs):
+
+        super().__init__(
+            X=X, y=y,
+            train_idx=train_idx,
+            test_idx=test_idx,
+            label_idx=label_idx,
+            unlabel_idx=unlabel_idx,
+            ml_technique=ml_technique,
+            performance_metrics=performance_metrics,
+            query_strategy=query_strategy,
+            oracle=oracle,
+            batch_size=batch_size,
+            **kwargs)
+
+        self._rounds = 10
+
+    def executeLabeledTraining(self, client: Client = None):
+        # Train Model over the labeled instances
+        if client is not None:
+            with joblib.parallel_backend("dask"):
+                self._ml_technique.fit(X=self._X[self._label_idx.index, :], y=self._Y[self._label_idx.index])
+
+                # predict the results over the labeled test instances
+                label_pred = self._ml_technique.predict(self._X[self._test_idx, :])
+        else:
+            self._ml_technique.fit(X=self._X[self._label_idx.index, :], y=self._Y[self._label_idx.index])
+            # predict the results over the labeled test instances
+            label_pred = self._ml_technique.predict(self._X[self._test_idx, :])
+
+        # performance calc for all metrics
+        label_perf = []
+        for metric in self._performance_metrics:
+            value = delayed(metric.compute(y_true=self._Y[self._test_idx], y_pred=label_pred))
+            label_perf.append(delayed({"name": metric.metric_name, "value": value}))
+
+        return label_pred, compute(label_perf)[0]
+
+    def selectInstances(self, client: Client = None):
+        if 'model' in inspect.getfullargspec(self._query_strategy.select)[0]:
+            return self._query_strategy.select(X=self._X,
+                                               y=self._Y,
+                                               label_index=self._label_idx,
+                                               unlabel_index=self._unlabel_idx,
+                                               batch_size=self._batch_size,
+                                               model=self._ml_technique,
+                                               client=client)
+        else:
+            return self._query_strategy.select(X=self._X,
+                                               y=self._Y,
+                                               label_index=self._label_idx,
+                                               unlabel_index=self._unlabel_idx,
+                                               batch_size=self._batch_size)
+
+    def labelInstances(self, select_ind, verbose):
+        # For each selected instance retreive from the oracle the labeled instaces
+        label, cost = self._oracle.query_by_index(select_ind)
+
+        if verbose:
+            print("Label: %s, Cost: %s" % (label, cost))
+
+    def updateLabelledData(self, select_ind):
+        self._label_idx.update(select_ind)
+        self._unlabel_idx.difference_update(select_ind)
+
+
+class StreamBasedSelectiveSamplingScenario(AbstractScenario, metaclass=ABCMeta):
 
     def __init__(self,
                  X, y,

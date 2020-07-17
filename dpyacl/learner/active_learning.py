@@ -92,7 +92,7 @@ class ClassicActiveLearning(AbstractALAlgorithm, metaclass=ABCMeta):
         round = 0
         saver = self._scenario.initIteration(verbose, **kwargs)
 
-        while not self._stopping_criterion.is_stop():
+        while not self._stopping_criterion.is_stop() and self._scenario.remainingUnlabeledInstances():
             # Train and evaluate Model over the labeled instances
             label_pred, label_perf = self._scenario.executeLabeledTraining(client=client)
 

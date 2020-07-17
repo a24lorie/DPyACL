@@ -21,7 +21,7 @@ class QueryInstanceRandom(SinlgeLabelIndexQuery, metaclass=ABCMeta):
     def query_function_name(self):
         return "InstanceRandom"
 
-    def select(self, X, y, label_index, unlabel_index, **kwargs):
+    def select(self, X, y, label_index, unlabel_index, batch_size=1, **kwargs):
         """
         Select indexes randomly
 
@@ -36,6 +36,7 @@ class QueryInstanceRandom(SinlgeLabelIndexQuery, metaclass=ABCMeta):
             Please ignore it.
         :param unlabel_index: collections.abc.Iterable
             The indexes of unlabeled set.
+        :param batch_size:
 
         Return
         -------
@@ -43,13 +44,13 @@ class QueryInstanceRandom(SinlgeLabelIndexQuery, metaclass=ABCMeta):
             The selected indexes which is a subset of unlabel_index.
         """
 
-        super().select(X, y, label_index, unlabel_index,  **kwargs)
+        super().select(X, y, label_index, unlabel_index, batch_size=batch_size,  **kwargs)
 
-        if len(unlabel_index) <= self._batch_size:
+        if len(unlabel_index) <= batch_size:
             return np.array(unlabel_index)
 
         tpl = da.from_array(unlabel_index.index)
-        return tpl[randperm(len(unlabel_index) - 1, self._batch_size)].compute()
+        return tpl[randperm(len(unlabel_index) - 1, batch_size)].compute()
 
-    def _select_by_prediction(self, unlabel_index, predict, **kwargs):
+    def _select_by_prediction(self, unlabel_index, predict, batch_size=1, **kwargs):
         pass

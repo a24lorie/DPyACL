@@ -2,7 +2,7 @@
 Class to gathering, process and visualize active learning experiment results.
 Added support for several performance metrics in a single experiment
 """
-# Authors: Ying-Peng Tang, Alfredo Lorie
+# Authors: Alfredo Lorie extended from Ying-Peng Tang version
 
 import collections
 import copy

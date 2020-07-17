@@ -4,7 +4,7 @@ Serve as the basic type of 'set' operation.
 
 Added distributed processing capabilities with Dask
 """
-# Authors: Ying-Peng Tang, Alfredo Lorie
+# Authors: Alfredo Lorie extended from Ying-Peng Tang version
 
 
 import collections

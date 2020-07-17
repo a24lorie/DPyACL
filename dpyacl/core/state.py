@@ -6,7 +6,7 @@ The information includes:
 2. The selected index for each query
 
 """
-# Authors: Ying-Peng Tang, Alfredo Lorie
+# Authors: Alfredo Lorie extended from Ying-Peng Tang version
 
 import collections.abc
 import copy

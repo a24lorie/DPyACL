@@ -2,7 +2,7 @@
 Pre-defined oracle class
 Implement classical situation
 """
-# Authors: Ying-Peng Tang, Alfredo Lorie
+# Authors: Alfredo Lorie extended from Ying-Peng Tang version
 
 import os
 from abc import ABCMeta, abstractmethod
