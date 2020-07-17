@@ -3,8 +3,6 @@ Stopping Criteria Implementations with an Object Oriented design
 """
 # Authors: Alfredo Lorie
 
-from __future__ import division
-
 import time
 from abc import ABCMeta, abstractmethod
 
