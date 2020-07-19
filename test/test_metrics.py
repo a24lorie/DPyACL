@@ -13,7 +13,7 @@ from dpyacl.core.stop_criteria import MaxIteration
 from dpyacl.experiment import ExperimentAnalyserFactory
 from dpyacl.experiment.context import HoldOutExperiment
 from dpyacl.metrics import Accuracy, Mse, Recall, ZeroOneLoss, F1, HammingLoss, RocAuc, Precision
-from dpyacl.oracle import SimulatedOracleQueryIndex
+from dpyacl.oracle import SimulatedOracle
 from dpyacl.scenario.scenario import PoolBasedSamplingScenario
 from dpyacl.strategies.single_label import QueryInstanceRandom
 
@@ -44,13 +44,14 @@ class TestMetrics(unittest.TestCase):
         performance_metrics = [Accuracy()]
 
         experiment = HoldOutExperiment(
-            self.__X_class,
-            self.__y_class,
+            client=self.__client,
+            X=self.__X_class,
+            Y=self.__y_class,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique_class,
             performance_metrics=performance_metrics,
             query_strategy=self.__query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y_class),
+            oracle=SimulatedOracle(labels=self.__y_class),
             stopping_criteria=MaxIteration(value=10),
             self_partition=True,
             test_ratio=0.3,
@@ -77,13 +78,14 @@ class TestMetrics(unittest.TestCase):
         performance_metrics = [Mse(squared=False)]
 
         experiment = HoldOutExperiment(
-            self.__X_reg,
-            self.__y_reg,
+            client=self.__client,
+            X=self.__X_reg,
+            Y=self.__y_reg,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique_reg,
             performance_metrics=performance_metrics,
             query_strategy=self.__query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y_reg),
+            oracle=SimulatedOracle(labels=self.__y_reg),
             stopping_criteria=MaxIteration(value=20),
             self_partition=True,
             test_ratio=0.3,
@@ -124,13 +126,14 @@ class TestMetrics(unittest.TestCase):
         performance_metrics = [Mse(squared=True)]
 
         experiment = HoldOutExperiment(
-            self.__X_reg,
-            self.__y_reg,
+            client=self.__client,
+            X=self.__X_reg,
+            Y=self.__y_reg,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique_reg,
             performance_metrics=performance_metrics,
             query_strategy=self.__query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y_reg),
+            oracle=SimulatedOracle(labels=self.__y_reg),
             stopping_criteria=MaxIteration(value=10),
             self_partition=True,
             test_ratio=0.3,
@@ -171,13 +174,14 @@ class TestMetrics(unittest.TestCase):
         performance_metrics = [ZeroOneLoss()]
 
         experiment = HoldOutExperiment(
-            self.__X_class,
-            self.__y_class,
+            client=self.__client,
+            X=self.__X_class,
+            Y=self.__y_class,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique_class,
             performance_metrics=performance_metrics,
             query_strategy=self.__query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y_class),
+            oracle=SimulatedOracle(labels=self.__y_class),
             stopping_criteria=MaxIteration(value=10),
             self_partition=True,
             test_ratio=0.3,
@@ -204,13 +208,14 @@ class TestMetrics(unittest.TestCase):
         performance_metrics = [F1()]
 
         experiment = HoldOutExperiment(
-            self.__X_class,
-            self.__y_class,
+            client=self.__client,
+            X=self.__X_class,
+            Y=self.__y_class,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique_class,
             performance_metrics=performance_metrics,
             query_strategy=self.__query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y_class),
+            oracle=SimulatedOracle(labels=self.__y_class),
             stopping_criteria=MaxIteration(value=10),
             self_partition=True,
             test_ratio=0.3,
@@ -237,13 +242,14 @@ class TestMetrics(unittest.TestCase):
         performance_metrics = [HammingLoss()]
 
         experiment = HoldOutExperiment(
-            self.__X_class,
-            self.__y_class,
+            client=self.__client,
+            X=self.__X_class,
+            Y=self.__y_class,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique_class,
             performance_metrics=performance_metrics,
             query_strategy=self.__query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y_class),
+            oracle=SimulatedOracle(labels=self.__y_class),
             stopping_criteria=MaxIteration(value=10),
             self_partition=True,
             test_ratio=0.3,
@@ -270,13 +276,14 @@ class TestMetrics(unittest.TestCase):
         performance_metrics = [RocAuc()]
 
         experiment = HoldOutExperiment(
-            self.__X_class,
-            self.__y_class,
+            client=self.__client,
+            X=self.__X_class,
+            Y=self.__y_class,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique_class,
             performance_metrics=performance_metrics,
             query_strategy=self.__query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y_class),
+            oracle=SimulatedOracle(labels=self.__y_class),
             stopping_criteria=MaxIteration(value=10),
             self_partition=True,
             test_ratio=0.3,
@@ -303,13 +310,14 @@ class TestMetrics(unittest.TestCase):
         performance_metrics = [Precision()]
 
         experiment = HoldOutExperiment(
-            self.__X_class,
-            self.__y_class,
+            client=self.__client,
+            X=self.__X_class,
+            Y=self.__y_class,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique_class,
             performance_metrics=performance_metrics,
             query_strategy=self.__query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y_class),
+            oracle=SimulatedOracle(labels=self.__y_class),
             stopping_criteria=MaxIteration(value=10),
             self_partition=True,
             test_ratio=0.3,
@@ -336,13 +344,14 @@ class TestMetrics(unittest.TestCase):
         performance_metrics = [Recall()]
 
         experiment = HoldOutExperiment(
-            self.__X_class,
-            self.__y_class,
+            client=self.__client,
+            X=self.__X_class,
+            Y=self.__y_class,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=self.__ml_technique_class,
             performance_metrics=performance_metrics,
             query_strategy=self.__query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y_class),
+            oracle=SimulatedOracle(labels=self.__y_class),
             stopping_criteria=MaxIteration(value=10),
             self_partition=True,
             test_ratio=0.3,

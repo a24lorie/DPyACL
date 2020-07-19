@@ -3,8 +3,8 @@ from __future__ import division
 import copy
 import unittest
 
+from dpyacl.core.state import State, StateItem
 from dpyacl.core.stop_criteria import MaxIteration, CostLimit, PercentOfUnlabel, UnlabelSetEmpty, TimeLimit
-from dpyacl.core import State, StateItem
 
 
 class TestStopCriteria(unittest.TestCase):

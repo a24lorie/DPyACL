@@ -2,18 +2,19 @@ import time
 import unittest
 
 import pandas as pd
+from distributed import Client
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, hamming_loss
 
-from dpyacl.query.uncertainty_sampling import QueryInstanceRandom, QueryMarginSampling
+from dpyacl.strategies.single_label import QueryInstanceRandom, QueryMarginSampling
+from dpyacl.core.misc.misc import split
 from dpyacl.core.stop_criteria import MaxIteration
 from dpyacl.experiment import ExperimentAnalyserFactory
 from dpyacl.experiment.context import HoldOutExperiment, CrossValidationExperiment
 from dpyacl.metrics import Accuracy
 from dpyacl.metrics.evaluation import F1, HammingLoss, Precision, Recall
-from dpyacl.oracle import SimulatedOracleQueryIndex
+from dpyacl.oracle import SimulatedOracle
 from dpyacl.scenario import PoolBasedSamplingScenario
-from dpyacl.core.misc.misc import split
 
 
 class TestActiveLearningHMQE(unittest.TestCase):
@@ -29,18 +30,21 @@ class TestActiveLearningHMQE(unittest.TestCase):
         self.__y = df.filter(['BAD'], axis=1)
 
         self.__train_idx, self.__test_idx, self.__label_idx, self.__unlabel_idx = split(
-            X=self.__X,
-            y=self.__y['BAD'],
+            X=self.__X.to_numpy(),
+            y=self.__y['BAD'].to_numpy(),
             test_ratio=0.3,
             initial_label_rate=0.05,
             split_count=1,
             all_class=True)
 
+        self.__client = Client("tcp://192.168.2.100:8786")
+        # self.__client = None
+
     def test_ActiveLearning_HoldHout(self):
 
         # INI the ALExperiment -----------------------------------------------------------------------------------------
         al_ml_technique = LogisticRegression(solver='liblinear')
-        stopping_criteria = MaxIteration(50)
+        stopping_criteria = MaxIteration(25)
         query_strategy = QueryMarginSampling()
         performance_metrics = [
                 Accuracy(),
@@ -50,8 +54,9 @@ class TestActiveLearningHMQE(unittest.TestCase):
                 Recall(average='macro')]
 
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y['BAD'],
+            client=self.__client,
+            X=self.__X.to_numpy(),
+            Y=self.__y['BAD'].to_numpy(),
             scenario_type=PoolBasedSamplingScenario,
             train_idx=self.__train_idx,
             test_idx=self.__test_idx,
@@ -60,14 +65,15 @@ class TestActiveLearningHMQE(unittest.TestCase):
             ml_technique=al_ml_technique,
             performance_metrics=performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=stopping_criteria,
-            self_partition=False
+            self_partition=False,
+            rebalance=True
         )
 
         print("")
         start_time = time.time()
-        result = experiment.evaluate(verbose=False)
+        result = experiment.evaluate(verbose=True)
         print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
 
         query_analyser = ExperimentAnalyserFactory.experiment_analyser(
@@ -126,13 +132,14 @@ class TestActiveLearningHMQE(unittest.TestCase):
 
         # init the ALExperiment
         experiment = HoldOutExperiment(
-            self.__X,
-            self.__y,
+            client=None,
+            X=self.__X.to_numpy(),
+            Y=self.__y.to_numpy(),
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=ml_technique,
             performance_metrics=performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=stopping_criteria,
             self_partition=True,
             test_ratio=0.3,
@@ -171,7 +178,7 @@ class TestActiveLearningHMQE(unittest.TestCase):
             ml_technique=ml_technique,
             performance_metrics=performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=stopping_criteria,
             self_partition=True,
             kfolds=10,
@@ -200,7 +207,7 @@ class TestActiveLearningHMQE(unittest.TestCase):
         # ml_technique = svm.SVC(kernel='rbf', probability=True)
         # ml_technique = svm.NuSVC(gamma='auto', probability=True)
         # stopping_criteria = PercentOfUnlabel(70)
-        stopping_criteria = MaxIteration(50)
+        stopping_criteria = MaxIteration(20)
         query_strategy = QueryMarginSampling()
         performance_metrics = [
             Accuracy(),
@@ -217,11 +224,11 @@ class TestActiveLearningHMQE(unittest.TestCase):
             ml_technique=ml_technique,
             performance_metrics=performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=stopping_criteria,
             self_partition=True,
             kfolds=10,
-            oracle_name='SimulatedOracleQueryIndex',
+            oracle_name='SimulatedOracle',
             test_ratio=0.3,
             initial_label_rate=0.05,
             all_class=True

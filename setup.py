@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='dpyacl',
-    version='0.3.1',
+    version='0.3.2',
     author='Alfredo Lorie',
     author_email='a24lorie@gmail.com',
     description='Distributed Python Active Learning library',
@@ -17,7 +17,7 @@ setup(
               'dpyacl.experiment',
               'dpyacl.learner',
               'dpyacl.metrics',
-              'dpyacl.oracle',
+              'dpyacl.simOracle',
               'dpyacl.scenario',
               'dpyacl.strategies',
               'dpyacl.strategies.single_label'
@@ -29,7 +29,7 @@ setup(
         'dpyacl.experiment': 'dpyacl/experiment',
         'dpyacl.learner': 'dpyacl/learner',
         'dpyacl.metrics': 'dpyacl/metrics',
-        'dpyacl.oracle': 'dpyacl/oracle',
+        'dpyacl.simOracle': 'dpyacl/simOracle',
         'dpyacl.scenario': 'dpyacl/scenario',
         'dpyacl.strategies': 'dpyacl/strategies',
         'dpyacl.strategies.single_label': 'dpyacl/strategies/single_label'

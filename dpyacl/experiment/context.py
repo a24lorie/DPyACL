@@ -25,9 +25,10 @@ from dpyacl.learner import ClassicActiveLearning
 from dpyacl.metrics import BaseMetrics
 from dpyacl.oracle.oracle import Oracle
 from dpyacl.scenario import *
-from dpyacl.strategies.stategies import SinlgeLabelIndexQuery
 
 __all__ = ['AbstractExperiment', 'HoldOutExperiment', 'CrossValidationExperiment']
+
+from dpyacl.strategies import SingleLabelIndexQuery
 
 
 class AbstractExperiment(metaclass=ABCMeta):
@@ -38,7 +39,7 @@ class AbstractExperiment(metaclass=ABCMeta):
                  ml_technique,
                  scenario_type: AbstractScenario,
                  performance_metrics: [],
-                 query_strategy: SinlgeLabelIndexQuery,
+                 query_strategy: SingleLabelIndexQuery,
                  oracle: Oracle,
                  stopping_criteria: AbstractStopCriterion,
                  self_partition: bool,
@@ -86,6 +87,7 @@ class AbstractExperiment(metaclass=ABCMeta):
             self._X = X.persist()
         else:
             self._X = da.from_array(X, chunks=len(X) // 50).persist()
+
 
         if isinstance(Y , da.core.Array):
             self._Y = Y.persist()
@@ -185,7 +187,7 @@ class AbstractExperiment(metaclass=ABCMeta):
 
         self._oracle = oracle
         if self._oracle is None:
-            raise ValueError("required param 'oracle' can not be empty")
+            raise ValueError("required param 'simOracle' can not be empty")
 
         self._stopping_criteria = stopping_criteria
         if self._stopping_criteria is None:
@@ -220,7 +222,7 @@ class HoldOutExperiment(AbstractExperiment, metaclass=ABCMeta):
                  scenario_type: AbstractScenario,
                  ml_technique,
                  performance_metrics: [],
-                 query_strategy: SinlgeLabelIndexQuery,
+                 query_strategy: SingleLabelIndexQuery,
                  oracle: Oracle,
                  stopping_criteria: AbstractStopCriterion,
                  self_partition: bool,
@@ -283,7 +285,7 @@ class CrossValidationExperiment(AbstractExperiment, metaclass=ABCMeta):
                  scenario_type: AbstractScenario,
                  ml_technique,
                  performance_metrics: [],
-                 query_strategy: SinlgeLabelIndexQuery,
+                 query_strategy: SingleLabelIndexQuery,
                  oracle: Oracle,
                  stopping_criteria: AbstractStopCriterion,
                  self_partition: bool,

@@ -21,7 +21,7 @@ from sklearn.utils import check_X_y
 
 __all__ = [
     'BaseQueryStrategy',
-    'SinlgeLabelIndexQuery',
+    'SingleLabelIndexQuery',
     'InstanceUncertaintyStrategy',
     'ExpectedErrorReductionStrategy',
     'QueryByCommitteeStategy'
@@ -47,11 +47,15 @@ class BaseQueryStrategy(metaclass=ABCMeta):
     def select(self, *args, **kwargs):
         pass
 
+    @abstractmethod
+    def isMaximal(self, *args, **kwargs):
+        pass
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Base Query Index Class
 # ----------------------------------------------------------------------------------------------------------------------
-class SinlgeLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
+class SingleLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
     """
     The base class for the selection method which imposes a constraint on the parameters of select()
     """
@@ -61,7 +65,10 @@ class SinlgeLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
     def query_function_name(self):
         pass
 
-    @abstractmethod
+    def isMaximal(self):
+        # By default return true
+        return True
+
     def select(self, X, y, label_index, unlabel_index, batch_size=1, **kwargs):
         """
         Select instances to strategies
@@ -118,7 +125,6 @@ class SinlgeLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
         else:
             return model.predict(unlabel_x, kwargs)
 
-    @abstractmethod
     def _select_by_prediction(self, unlabel_index, predict, batch_size=1, **kwargs):
         """
         Perform basic validation for indexes selection for querying
@@ -152,7 +158,7 @@ class SinlgeLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
 # ----------------------------------------------------------------------------------------------------------------------
 # Uncertainty Sampling Strategy
 # ----------------------------------------------------------------------------------------------------------------------
-class InstanceUncertaintyStrategy(SinlgeLabelIndexQuery, metaclass=ABCMeta):
+class InstanceUncertaintyStrategy(SingleLabelIndexQuery, metaclass=ABCMeta):
     """
     Uncertainty strategies strategy, this type of strategy needs a probabilistic model.
 
@@ -209,7 +215,7 @@ class InstanceUncertaintyStrategy(SinlgeLabelIndexQuery, metaclass=ABCMeta):
 # ----------------------------------------------------------------------------------------------------------------------
 # Expected Error Reduction Strategy
 # ----------------------------------------------------------------------------------------------------------------------
-class ExpectedErrorReductionStrategy(SinlgeLabelIndexQuery, metaclass=ABCMeta):
+class ExpectedErrorReductionStrategy(SingleLabelIndexQuery, metaclass=ABCMeta):
     """
     The objective of this active learning strategy is to reduce the expected total number of incorrect predictions.
 
@@ -329,7 +335,7 @@ class ExpectedErrorReductionStrategy(SinlgeLabelIndexQuery, metaclass=ABCMeta):
 # ----------------------------------------------------------------------------------------------------------------------
 # Query By Committee Strategy
 # ----------------------------------------------------------------------------------------------------------------------
-class QueryByCommitteeStategy(SinlgeLabelIndexQuery):
+class QueryByCommitteeStategy(SingleLabelIndexQuery):
     """Query-By-Committee Strategy
 
     Parameters

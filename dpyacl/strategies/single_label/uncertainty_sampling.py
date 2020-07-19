@@ -52,9 +52,6 @@ class QueryEntropySampling(InstanceUncertaintyStrategy, metaclass=ABCMeta):
     def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
         super()._select_by_prediction(unlabel_index, predict)
 
-        # calc entropy
-        predict[predict <= 0] = 1e-06  # avoid zero division
-
         entro = []
         for vec in predict:
             entro.append(delayed(sum)(vec * da.log(vec)))
@@ -116,6 +113,9 @@ class QueryMarginSampling(InstanceUncertaintyStrategy, metaclass=ABCMeta):
     def query_function_name(self):
         return "MarginSamplingQuery"
 
+    def isMaximal(self):
+        return False
+
     def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
         unlabel_idx, pv = super().select(X, y, label_index, unlabel_index, batch_size=batch_size, model=model, client=client)
         return self._select_by_prediction(unlabel_index=unlabel_idx, predict=pv, batch_size=batch_size)
@@ -142,6 +142,9 @@ class QueryDistanceToBoundarySampling(InstanceUncertaintyStrategy, metaclass=ABC
     @property
     def query_function_name(self):
         return "DistanceToBoundary"
+
+    def isMaximal(self):
+        return False
 
     def select(self, X, y, label_index, unlabel_index, batch_size=1, model=None, client: Client = None):
         if not hasattr(model, 'decision_function'):

@@ -5,7 +5,7 @@
                                May 2020
 			    Alfredo Lorie Bernardo							
 
-                             version 0.3.1
+                             version 0.3.2
 
 ***
 
@@ -61,8 +61,9 @@ performance_metrics = [
                 Recall(average='macro')]
 
 experiment = HoldOutExperiment(
-    _X,
-    _y,
+    client=None,
+    X=_X,
+    Y=_y,
     scenario_type=PoolBasedSamplingScenario,
     train_idx=train_idx,
     test_idx=test_idx,
@@ -71,7 +72,7 @@ experiment = HoldOutExperiment(
     ml_technique=ml_technique,
     performance_metrics=performance_metrics,
     query_strategy=query_strategy,
-    oracle=SimulatedOracleQueryIndex(labels=_y),
+    oracle=SimulatedOracle(labels=_y),
     stopping_criteria=stopping_criteria,
     self_partition=False
 )

@@ -8,7 +8,7 @@ core
 experiment
 learner
 metrics
-oracle
+simOracle
 scenario
 strategies
 """

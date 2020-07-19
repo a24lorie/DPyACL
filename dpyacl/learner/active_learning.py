@@ -102,7 +102,7 @@ class ClassicActiveLearning(AbstractALAlgorithm, metaclass=ABCMeta):
             select_ind = self._scenario.selectInstances(client=client)
 
             # show label values
-            self._scenario.labelInstances(select_ind, verbose)
+            self._scenario.labelInstances(select_ind, client=client, verbose=verbose)
 
             # update label and unlabel instaces
             self._scenario.updateLabelledData(select_ind)

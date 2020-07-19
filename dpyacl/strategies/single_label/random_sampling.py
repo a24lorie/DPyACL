@@ -3,7 +3,7 @@ from abc import ABCMeta
 import numpy as np
 
 import dask.array as da
-from ..stategies import SinlgeLabelIndexQuery
+from ..stategies import SingleLabelIndexQuery
 from ...core.misc import randperm
 
 __all__ = ['QueryInstanceRandom']
@@ -12,7 +12,7 @@ __all__ = ['QueryInstanceRandom']
 # ----------------------------------------------------------------------------------------------------------------------
 # Random Sampling Strategy
 # ----------------------------------------------------------------------------------------------------------------------
-class QueryInstanceRandom(SinlgeLabelIndexQuery, metaclass=ABCMeta):
+class QueryInstanceRandom(SingleLabelIndexQuery, metaclass=ABCMeta):
     """
     Randomly sample a batch of indexes from the unlabeled indexes.
     """
@@ -21,7 +21,7 @@ class QueryInstanceRandom(SinlgeLabelIndexQuery, metaclass=ABCMeta):
     def query_function_name(self):
         return "InstanceRandom"
 
-    def select(self, X, y, label_index, unlabel_index, batch_size=1, **kwargs):
+    def select(self, X, y, label_index, unlabel_index, batch_size=1):
         """
         Select indexes randomly
 
@@ -44,7 +44,7 @@ class QueryInstanceRandom(SinlgeLabelIndexQuery, metaclass=ABCMeta):
             The selected indexes which is a subset of unlabel_index.
         """
 
-        super().select(X, y, label_index, unlabel_index, batch_size=batch_size,  **kwargs)
+        super().select(X, y, label_index, unlabel_index, batch_size=batch_size)
 
         if len(unlabel_index) <= batch_size:
             return np.array(unlabel_index)

@@ -1,1 +1,1 @@
-from .oracle import Oracle,  SimulatedOracleQueryIndex
+from .oracle import Oracle, SimulatedOracle, ConsoleHumanOracle

@@ -1,2 +1,2 @@
-from .stategies import SinlgeLabelIndexQuery, BaseQueryStrategy, InstanceUncertaintyStrategy
+from .stategies import SingleLabelIndexQuery, BaseQueryStrategy, InstanceUncertaintyStrategy
 

@@ -20,7 +20,7 @@ import numpy as np
 from dask import delayed
 from distributed import Client
 
-from ..stategies import SinlgeLabelIndexQuery, ExpectedErrorReductionStrategy
+from ..stategies import SingleLabelIndexQuery, ExpectedErrorReductionStrategy
 from ...core.misc import nlargestarg, nsmallestarg
 
 __all__ = ['QueryExpectedLogLoss', 'QueryExpectedCeroOneLoss', 'QueryRegressionStd']
@@ -37,6 +37,9 @@ class QueryExpectedCeroOneLoss(ExpectedErrorReductionStrategy, metaclass=ABCMeta
     @property
     def query_function_name(self):
         return "ExpectedCeroOneLoss"
+
+    def isMaximal(self):
+        return False
 
     def _loss(self, prob):
         """Compute expected log-loss.
@@ -90,6 +93,9 @@ class QueryExpectedLogLoss(ExpectedErrorReductionStrategy, metaclass=ABCMeta):
     def query_function_name(self):
         return "ExpectedLogLoss"
 
+    def isMaximal(self):
+        return False
+
     def _loss(self, prob):
         """Compute expected log-loss.
 
@@ -133,9 +139,7 @@ class QueryExpectedLogLoss(ExpectedErrorReductionStrategy, metaclass=ABCMeta):
         return tpl[nsmallestarg(predict, batch_size)].compute()
 
 
-class QueryRegressionStd(SinlgeLabelIndexQuery, metaclass=ABCMeta):
-    """
-    """
+class QueryRegressionStd(SingleLabelIndexQuery, metaclass=ABCMeta):
 
     @property
     def query_function_name(self):

@@ -10,11 +10,11 @@ from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 from sklearn.linear_model import LogisticRegression
 
 from dpyacl.core.misc.misc import split
-from dpyacl.core.stop_criteria import UnlabelSetEmpty, PercentOfUnlabel, MaxIteration
+from dpyacl.core.stop_criteria import PercentOfUnlabel, MaxIteration
 from dpyacl.experiment import ExperimentAnalyserFactory
 from dpyacl.experiment.context import HoldOutExperiment
 from dpyacl.metrics import Accuracy, Mse, Recall
-from dpyacl.oracle import SimulatedOracleQueryIndex
+from dpyacl.oracle import SimulatedOracle
 from dpyacl.scenario.scenario import PoolBasedSamplingScenario
 from dpyacl.strategies.single_label import QueryInstanceRandom, QueryMarginSampling, QueryDistanceToBoundarySampling, \
     QueryLeastConfidentSampling, QueryEntropySampling, QueryRegressionStd
@@ -35,6 +35,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
     __performance_metrics = [Accuracy(), Recall()]
     __batch_size = 5
     __client = Client("tcp://192.168.2.100:8786")
+    # __client = None
 
     def test_random_query(self):
 
@@ -49,7 +50,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
@@ -85,7 +86,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
@@ -122,8 +123,8 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
-            stopping_criteria=UnlabelSetEmpty(),
+            oracle=SimulatedOracle(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
             initial_label_rate=0.05,
@@ -158,8 +159,8 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
-            stopping_criteria=UnlabelSetEmpty(),
+            oracle=SimulatedOracle(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
             initial_label_rate=0.05,
@@ -195,8 +196,8 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
-            stopping_criteria=UnlabelSetEmpty(),
+            oracle=SimulatedOracle(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
             initial_label_rate=0.05,
@@ -231,8 +232,8 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
-            stopping_criteria=UnlabelSetEmpty(),
+            oracle=SimulatedOracle(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
             initial_label_rate=0.05,
@@ -268,8 +269,8 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
-            stopping_criteria=UnlabelSetEmpty(),
+            oracle=SimulatedOracle(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
             initial_label_rate=0.05,
@@ -304,8 +305,8 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
-            stopping_criteria=UnlabelSetEmpty(),
+            oracle=SimulatedOracle(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
             initial_label_rate=0.05,
@@ -341,8 +342,8 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
-            stopping_criteria=UnlabelSetEmpty(),
+            oracle=SimulatedOracle(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
             initial_label_rate=0.05,
@@ -377,8 +378,8 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
-            stopping_criteria=UnlabelSetEmpty(),
+            oracle=SimulatedOracle(labels=self.__y),
+            stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
             initial_label_rate=0.05,
@@ -433,7 +434,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=ml_technique,
             performance_metrics=[Mse(squared=True)],
             query_strategy=QueryRegressionStd(),
-            oracle=SimulatedOracleQueryIndex(labels=y),
+            oracle=SimulatedOracle(labels=y),
             stopping_criteria=PercentOfUnlabel(value=70),
             self_partition=False
         )
@@ -484,7 +485,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=ml_technique,
             performance_metrics=[Mse(squared=True)],
             query_strategy=QueryRegressionStd(),
-            oracle=SimulatedOracleQueryIndex(labels=y),
+            oracle=SimulatedOracle(labels=y),
             stopping_criteria=PercentOfUnlabel(value=70),
             self_partition=False,
             batch_size=self.__batch_size
@@ -517,7 +518,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(5),
             self_partition=True,
             test_ratio=0.3,
@@ -553,7 +554,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(5),
             self_partition=True,
             test_ratio=0.3,
@@ -590,7 +591,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(5),
             self_partition=True,
             test_ratio=0.3,
@@ -626,7 +627,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(5),
             self_partition=True,
             test_ratio=0.3,
@@ -663,7 +664,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
@@ -699,7 +700,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
@@ -736,7 +737,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
@@ -772,7 +773,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             ml_technique=self.__ml_technique,
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracleQueryIndex(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y),
             stopping_criteria=MaxIteration(20),
             self_partition=True,
             test_ratio=0.3,
