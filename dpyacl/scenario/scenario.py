@@ -60,7 +60,7 @@ class AbstractScenario(metaclass=ABCMeta):
 
         self._oracle = oracle
         if self._oracle is None:
-            raise ValueError("required param 'simOracle' can not be empty")
+            raise ValueError("required param 'oracle' can not be empty")
 
         self._scenario_result = []
         self._batch_size = batch_size
@@ -85,14 +85,20 @@ class AbstractScenario(metaclass=ABCMeta):
         # Train Model over the labeled instances
         if client is not None:
             with joblib.parallel_backend("dask"):
-                self._ml_technique.fit(X=self._X[self._label_idx.index, :], y=self._Y[self._label_idx.index])
+                self._ml_technique.fit(da.rechunk(self._X[self._label_idx.index, :]), da.rechunk(self._Y[self._label_idx.index]))
 
                 # predict the results over the labeled test instances
-                label_pred = self._ml_technique.predict(self._X[self._test_idx, :])
+                if hasattr(self._ml_technique, 'predict_classes'):
+                    label_pred = self._ml_technique.predict_classes(da.rechunk(self._X[self._test_idx, :]))
+                else:
+                    label_pred = self._ml_technique.predict(da.rechunk(self._X[self._test_idx, :]))
         else:
-            self._ml_technique.fit(X=self._X[self._label_idx.index, :], y=self._Y[self._label_idx.index])
+            self._ml_technique.fit(da.rechunk(self._X[self._label_idx.index, :]), da.rechunk(self._Y[self._label_idx.index]))
             # predict the results over the labeled test instances
-            label_pred = self._ml_technique.predict(self._X[self._test_idx, :])
+            if hasattr(self._ml_technique, 'predict_classes'):
+                label_pred = self._ml_technique.predict_classes(da.rechunk(self._X[self._test_idx, :]))
+            else:
+                label_pred = self._ml_technique.predict(da.rechunk(self._X[self._test_idx, :]))
 
         # performance calc for all metrics
         label_perf = []
@@ -106,31 +112,36 @@ class AbstractScenario(metaclass=ABCMeta):
         # For each selected instance retrieve from the simOracle the labeled instances
         labels, cost = self._oracle.query(instances = self._X[select_ind], indexes=select_ind)
 
-        labels_iterator =  zip(select_ind, labels)
+        labels_iterator = zip(select_ind, labels)
 
         for item in labels_iterator:
-            if select_ind == 0: # choose the first item
+            item_shape = np.shape(item[1]) if isinstance(item[1], (list, np.ndarray)) else da.shape(item[1])
+            if len(item_shape) == len(da.shape(np.asarray(labels))):
+                new_item = item[1]
+            else:
+                new_item = [item[1]]
+
+            if item[0] == 0: # choose the first item
                 result = da.concatenate([
-                                item[1] if isinstance(item[1], (list, np.ndarray)) else [item[1]],
+                                new_item,
                                 self._Y[item[0]+1:]
                 ], axis=0)
-            elif select_ind is len(self._Y) - 1: # choose the last item
+            elif item[0] == len(self._Y) - 1: # choose the last item
                 result = da.concatenate([
                                 self._Y[: item[0]],
-                                item[1] if isinstance(item[1], (list, np.ndarray)) else [item[1]]
+                                new_item
                 ], axis=0)
             else: # any other item
                 result = da.concatenate([
                                 self._Y[: item[0]],
-                                item[1] if isinstance(item[1], (list, np.ndarray)) else [item[1]],
+                                new_item,
                                 self._Y[item[0] + 1:]
                 ],axis=0)
 
+        self._Y = result.persist()
+
         if client is not None:
-            self._Y = result.persist()
             client.rebalance(self._Y)
-        else:
-            self._Y = result
 
         if verbose:
             print("Label: %s, Cost: %s" % (labels, cost))

@@ -43,8 +43,8 @@ class TestActiveLearningHMQE(unittest.TestCase):
     def test_ActiveLearning_HoldHout(self):
 
         # INI the ALExperiment -----------------------------------------------------------------------------------------
-        al_ml_technique = LogisticRegression(solver='liblinear')
-        stopping_criteria = MaxIteration(25)
+        al_ml_technique = LogisticRegression(solver='sag')
+        stopping_criteria = MaxIteration(10)
         query_strategy = QueryMarginSampling()
         performance_metrics = [
                 Accuracy(),
@@ -65,10 +65,11 @@ class TestActiveLearningHMQE(unittest.TestCase):
             ml_technique=al_ml_technique,
             performance_metrics=performance_metrics,
             query_strategy=query_strategy,
-            oracle=SimulatedOracle(labels=self.__y),
+            oracle=SimulatedOracle(labels=self.__y['BAD'].to_numpy()),
             stopping_criteria=stopping_criteria,
             self_partition=False,
-            rebalance=True
+            rebalance=True,
+            batch_size=50
         )
 
         print("")

@@ -33,9 +33,9 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
 
     __ml_technique = LogisticRegression(solver='sag')
     __performance_metrics = [Accuracy(), Recall()]
-    __batch_size = 5
-    __client = Client("tcp://192.168.2.100:8786")
-    # __client = None
+    __batch_size = 10
+    # __client = Client("tcp://192.168.2.100:8786")
+    __client = None
 
     def test_random_query(self):
 
@@ -738,7 +738,7 @@ class TestSingleLabelQueryStrategy(unittest.TestCase):
             performance_metrics=self.__performance_metrics,
             query_strategy=query_strategy,
             oracle=SimulatedOracle(labels=self.__y),
-            stopping_criteria=MaxIteration(20),
+            stopping_criteria=MaxIteration(5),
             self_partition=True,
             test_ratio=0.3,
             initial_label_rate=0.05,

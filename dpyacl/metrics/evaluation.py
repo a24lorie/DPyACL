@@ -11,6 +11,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 import sklearn
 from dask import compute
+from dask.delayed import Delayed
 from dask_ml import metrics
 from scipy.sparse import csr_matrix
 
@@ -262,7 +263,10 @@ class Mse(BaseMetrics, metaclass=ABCMeta):
         if self._squared:
             return metrics.mean_squared_error(y_true, compute(y_pred), sample_weight=None)
         else:
-            return sklearn.metrics.mean_squared_error(y_true, y_pred, sample_weight=None, squared=self._squared)
+            return sklearn.metrics.mean_squared_error(y_true,
+                                                      y_pred.compute() if isinstance(y_pred, Delayed) else y_pred,
+                                                      sample_weight=None,
+                                                      squared=self._squared)
 
 
 class Accuracy(BaseMetrics, metaclass=ABCMeta):
@@ -294,7 +298,10 @@ class Accuracy(BaseMetrics, metaclass=ABCMeta):
         :return score : float
         """
         normalize = kwargs.pop("normalize", True)
-        return metrics.accuracy_score(y_true, compute(y_pred), normalize=normalize, sample_weight=None)
+        return metrics.accuracy_score(y_true,
+                                      y_pred.compute() if isinstance(y_pred, Delayed) else y_pred,
+                                      normalize=normalize,
+                                      sample_weight=None)
 
 
 class ZeroOneLoss(BaseMetrics, metaclass=ABCMeta):
@@ -334,7 +341,10 @@ class ZeroOneLoss(BaseMetrics, metaclass=ABCMeta):
             (float), else it returns the number of misclassifications (int).
         """
         normalize = kwargs.pop("normalize", True)
-        return sklearn.metrics.zero_one_loss(y_true, y_pred, normalize=normalize, sample_weight=None)
+        return sklearn.metrics.zero_one_loss(y_true,
+                                             y_pred.compute() if isinstance(y_pred, Delayed) else y_pred,
+                                             normalize=normalize,
+                                             sample_weight=None)
 
 
 class F1(BaseMetrics, metaclass=ABCMeta):
@@ -405,7 +415,7 @@ class F1(BaseMetrics, metaclass=ABCMeta):
             average of the F1 scores of each class for the multiclass task.
             """
 
-        return sklearn.metrics.f1_score(y_true, y_pred,
+        return sklearn.metrics.f1_score(y_true, y_pred.compute() if isinstance(y_pred, Delayed) else y_pred,
                                         sample_weight=sample_weight,
                                         labels=None,
                                         pos_label=1,
@@ -448,7 +458,9 @@ class HammingLoss(BaseMetrics, metaclass=ABCMeta):
 
         """
 
-        return sklearn.metrics.hamming_loss(y_true, y_pred, sample_weight=None)
+        return sklearn.metrics.hamming_loss(y_true,
+                                            y_pred.compute() if isinstance(y_pred, Delayed) else y_pred,
+                                            sample_weight=None)
 
 
 class RocAuc(BaseMetrics, metaclass=ABCMeta):
@@ -557,7 +569,9 @@ class RocAuc(BaseMetrics, metaclass=ABCMeta):
         auc : float
         """
 
-        return sklearn.metrics.roc_auc_score(y_true, y_pred, average=self._average,
+        return sklearn.metrics.roc_auc_score(y_true,
+                                             y_pred.compute() if isinstance(y_pred, Delayed) else y_pred,
+                                             average=self._average,
                                              sample_weight=sample_weight,
                                              max_fpr=self._max_fpr,
                                              multi_class=self._multi_class,
@@ -635,7 +649,8 @@ class Precision(BaseMetrics, metaclass=ABCMeta):
             average of the precision of each class for the multiclass task..
         """
 
-        return sklearn.metrics.precision_score(y_true, y_pred,
+        return sklearn.metrics.precision_score(y_true,
+                                               y_pred.compute() if isinstance(y_pred, Delayed) else y_pred,
                                                sample_weight=sample_weight,
                                                labels=None,
                                                pos_label=1,
@@ -714,7 +729,8 @@ class Recall(BaseMetrics, metaclass=ABCMeta):
             average of the recall of each class for the multiclass task.
         """
 
-        return sklearn.metrics.recall_score(y_true, y_pred,
+        return sklearn.metrics.recall_score(y_true,
+                                            y_pred.compute() if isinstance(y_pred, Delayed) else y_pred,
                                             sample_weight=sample_weight,
                                             labels=None,
                                             pos_label=1,

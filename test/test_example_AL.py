@@ -1,11 +1,11 @@
 import time
 import unittest
 
-import dask.array as da
 import numpy as np
-from distributed import Client
-from sklearn.datasets import make_classification, load_diabetes, load_iris
+from sklearn.datasets import load_iris, load_breast_cancer
 from sklearn.linear_model import LogisticRegression
+from dask_ml.linear_model import LogisticRegression as LogisticRegressionDaskML
+from dask_ml.naive_bayes import GaussianNB
 
 from dpyacl.core.stop_criteria import UnlabelSetEmpty, MaxIteration
 from dpyacl.experiment import ExperimentAnalyserFactory
@@ -14,7 +14,7 @@ from dpyacl.metrics import Accuracy
 from dpyacl.metrics.evaluation import F1, HammingLoss
 from dpyacl.oracle import SimulatedOracle, ConsoleHumanOracle
 from dpyacl.scenario import PoolBasedSamplingScenario
-from dpyacl.strategies.single_label import QueryInstanceRandom, QueryMarginSampling
+from dpyacl.strategies.single_label import QueryInstanceRandom, QueryMarginSampling, QueryEntropySampling
 from dpyacl.strategies.single_label.query_by_comitee import QueryVoteEntropy
 
 
@@ -23,7 +23,6 @@ class TestEvaluation(unittest.TestCase):
 
     # Get the data
     __X, __y = load_iris(return_X_y=True)
-    # __X, __y = load_diabetes(return_X_y=True)
 
     # __X, __y = make_classification(n_samples=100, n_features=10, n_informative=2, n_redundant=2,
     #                                n_repeated=0, n_classes=2, n_clusters_per_class=2, weights=None,
@@ -110,6 +109,45 @@ class TestEvaluation(unittest.TestCase):
 
         # get a brief description of the experiment
         query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
+    def test_hold_out_entropySampling_unlabelSetEmpty_dask_ml(self):
+        ml_technique = GaussianNB()
+        stopping_criteria = MaxIteration(50)
+        query_strategy = QueryEntropySampling()
+        performance_metrics = [Accuracy(),  F1(average='weighted'), HammingLoss()]
+
+        # init the ALExperiment
+        experiment = HoldOutExperiment(
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
+            scenario_type=PoolBasedSamplingScenario,
+            ml_technique=ml_technique,
+            performance_metrics=performance_metrics,
+            query_strategy=query_strategy,
+            oracle=SimulatedOracle(labels=self.__y),
+            stopping_criteria=stopping_criteria,
+            self_partition=True,
+            test_ratio=0.3,
+            initial_label_rate=0.05,
+            all_class=True
+        )
+
+        start_time = time.time()
+        result = experiment.evaluate(client= self.__client, verbose=True)
+        print()
+        print("---Active Learning experiment %s seconds ---" % (time.time() - start_time))
+
+        query_analyser = ExperimentAnalyserFactory.experiment_analyser(
+                            performance_metrics= [metric.metric_name for metric in performance_metrics],
+                            method_name=query_strategy.query_function_name,
+                            method_results=result,
+                            type="queries"
+                        )
+
+        # get a brief description of the experiment
+        query_analyser.plot_learning_curves(title='Active Learning experiment results')
+
     def test_hold_out_marginSamplingQuery_unlabelSetEmpty(self):
 
         ml_technique = LogisticRegression()
@@ -253,8 +291,9 @@ class TestEvaluation(unittest.TestCase):
 
         # init the ALExperiment
         experiment = CrossValidationExperiment(
-            self.__X,
-            self.__y,
+            client=self.__client,
+            X=self.__X,
+            Y=self.__y,
             scenario_type=PoolBasedSamplingScenario,
             ml_technique=ml_technique,
             performance_metrics=performance_metrics,

@@ -91,7 +91,8 @@ class SingleLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
             raise Exception('batch_size param must be greater or equal than 1 ')
 
         if X is not None and y is not None:
-            check_X_y(X, y, accept_sparse='csc', multi_output=True)
+            # check_X_y(X, y, accept_sparse='csc', multi_output=True)
+            pass
 
     def _get_pred(self, unlabel_x, model, proba=True, **kwargs):
         """
@@ -119,11 +120,14 @@ class SingleLabelIndexQuery(BaseQueryStrategy, metaclass=ABCMeta):
             proba = model.predict_proba(unlabel_x)
             pv = da.asarray(proba)
             spv = da.shape(pv)
+
             if len(spv) != 2 or spv[1] == 1:
                 raise Exception('2d array with [n_samples, n_class] is expected, but received: \n%s' % str(pv))
-            return pv
+
+            return pv.persist()
         else:
-            return model.predict(unlabel_x, kwargs)
+            pv = model.predict(unlabel_x, kwargs)
+            return pv
 
     def _select_by_prediction(self, unlabel_index, predict, batch_size=1, **kwargs):
         """

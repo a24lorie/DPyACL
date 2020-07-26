@@ -99,6 +99,7 @@ class ClassicActiveLearning(AbstractALAlgorithm, metaclass=ABCMeta):
             if round == 0:
                 saver.set_initial_point(label_perf)
 
+            # select the instances with the query strategy
             select_ind = self._scenario.selectInstances(client=client)
 
             # show label values

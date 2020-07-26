@@ -51,10 +51,11 @@ class QueryEntropySampling(InstanceUncertaintyStrategy, metaclass=ABCMeta):
 
     def _select_by_prediction(self, unlabel_index, predict, batch_size=1):
         super()._select_by_prediction(unlabel_index, predict)
-
         entro = []
         for vec in predict:
-            entro.append(delayed(sum)(vec * da.log(vec)))
+            cleanVec = vec.compute()
+            cleanVec[cleanVec <= 0] = 1e-06         # avoid zero division
+            entro.append(delayed(sum)(cleanVec * da.log(cleanVec)))
 
         tpl = da.from_array(unlabel_index)
         return tpl[nlargestarg(delayed(entro).compute(), batch_size)].compute()

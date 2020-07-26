@@ -5,7 +5,7 @@
                                May 2020
 			    Alfredo Lorie Bernardo							
 
-                             version 0.3.2
+                             version 0.3.3
 
 ***
 
@@ -21,7 +21,7 @@ Pandas, Scikit-learn and  Keras. This library is available in PyPI and distribut
 
 Up to date, DPyACL heavily uses Dask library to implement in a distributed and parallel fashion the the most significant 
 strategies strategies that have appeared on the single_label-label. 
-For next versions, we hope to include strategies strategies related with  multi-label learning paradigms.
+For future releases, we hope to include strategies strategies related with  multi-label learning paradigms.
 
 # Download
 
