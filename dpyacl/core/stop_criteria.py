@@ -78,7 +78,7 @@ class MaxIteration(AbstractStopCriterion, metaclass=ABCMeta):
     Parameters
     ----------
     value: int, default=50
-        Max of iterations
+        Max of num_iters
     """
 
     def __init__(self, value=50):
