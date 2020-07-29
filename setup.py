@@ -17,7 +17,7 @@ setup(
               'dpyacl.experiment',
               'dpyacl.learner',
               'dpyacl.metrics',
-              'dpyacl.simOracle',
+              'dpyacl.oracle',
               'dpyacl.scenario',
               'dpyacl.strategies',
               'dpyacl.strategies.single_label'
@@ -29,7 +29,7 @@ setup(
         'dpyacl.experiment': 'dpyacl/experiment',
         'dpyacl.learner': 'dpyacl/learner',
         'dpyacl.metrics': 'dpyacl/metrics',
-        'dpyacl.simOracle': 'dpyacl/simOracle',
+        'dpyacl.oracle': 'dpyacl/oracle',
         'dpyacl.scenario': 'dpyacl/scenario',
         'dpyacl.strategies': 'dpyacl/strategies',
         'dpyacl.strategies.single_label': 'dpyacl/strategies/single_label'
