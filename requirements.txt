@@ -1,7 +1,7 @@
 scipy==1.5.1
 matplotlib==3.2.2
 prettytable==0.7.2
-numpy==1.19.0
+numpy==1.22.0
 scikit-learn==0.22.1
 coverage==5.1
 dask==2.19.0
